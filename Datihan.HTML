@@ -1,3 +1,91 @@
+help me with this. The name of my file is Datihan.HTML
+stil 404 file not found
+Pasted text.txt
+Document
+this is my code may be this is the incorrect ?
+
+
+
+Perfect! 🎉 That confirms GitHub Pages is working correctly and your website is successfully deployed.
+
+Your working website is:
+
+https://jrnotjunior.github.io/Datihan/Datihan.HTML
+
+What happened
+
+The issue was simply the URL/path. Your file is named:
+
+Datihan.HTML
+
+So GitHub Pages serves it at:
+
+/Datihan/Datihan.HTML
+
+rather than automatically at:
+
+/Datihan/.
+
+If you want a cleaner URL
+
+If you'd prefer visitors to just go to:
+
+https://jrnotjunior.github.io/Datihan/
+
+then the file should be named:
+
+index.html
+
+That is optional, though. You don't need to change anything now if the current URL works.
+
+And importantly, don't delete the repository or redo the Pages setup—your deployment is working. ✅
+
+could you remove this in my code this is not necessary
+
+
+
+
+Edit
+could you edit my code to fix this? one of the item is not align  to other item 
+
+Yes — I found the issue. The “Canvas high-top sneakers” title wraps to two lines, which makes the information underneath sit differently from the other cards.
+
+I fixed the card CSS so that:
+
+All product titles reserve the same amount of vertical space.
+The size/condition text lines up consistently.
+Prices and buttons remain aligned.
+The rest of your website/code is unchanged.
+Download the corrected HTML
+
+Download the corrected Datihan HTML
+
+If you're editing directly in GitHub
+
+Find this section:
+
+.item-card h3{ font-size:1.02rem; font-weight:600; font-family:'Work Sans'; }
+.item-card .meta{ color:var(--ink-soft); font-size:.83rem; margin-top:4px; }
+
+Replace it with:
+
+.item-card h3{
+  font-size:1.02rem;
+  font-weight:600;
+  font-family:'Work Sans';
+  margin:0;
+  min-height:2.5em;
+}
+
+.item-card .meta{
+  color:var(--ink-soft);
+  font-size:.83rem;
+  margin-top:4px;
+  min-height:1.55em;
+}
+
+That will make the product cards look much more uniform. 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -124,9 +212,27 @@
   .item-card{ background:var(--panel); border:1px solid var(--line); padding:20px 18px 18px; position:relative; display:flex; flex-direction:column; }
   .item-card .icon{ width:52px; height:52px; margin-bottom:16px; color:var(--ink); }
   .item-card .photo{ width:100%; aspect-ratio:1; object-fit:cover; margin-bottom:16px; border:1px solid var(--line); }
-  .item-card h3{ font-size:1.02rem; font-weight:600; font-family:'Work Sans'; }
-  .item-card .meta{ color:var(--ink-soft); font-size:.83rem; margin-top:4px; }
-  .item-card .price{ margin-top:14px; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--line); padding-top:12px; }
+  .item-card h3{
+    font-size:1.02rem;
+    font-weight:600;
+    font-family:'Work Sans';
+    margin:0;
+    min-height:2.5em;
+  }
+  .item-card .meta{
+    color:var(--ink-soft);
+    font-size:.83rem;
+    margin-top:4px;
+    min-height:1.55em;
+  }
+  .item-card .price{
+    margin-top:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
   .item-card .price .amt{ font-family:'IBM Plex Mono'; font-size:1rem; color:var(--accent); }
   .item-card .badge{ position:absolute; top:14px; right:14px; font-family:'IBM Plex Mono'; font-size:.65rem; background:var(--accent-2); color:var(--ink); padding:3px 8px; border-radius:2px; }
   .item-card .add-btn{ margin-top:12px; width:100%; background:var(--ink); color:var(--bg); border:none; padding:.6rem; font-weight:500; font-size:.85rem; cursor:pointer; border-radius:2px; }
@@ -839,3 +945,5 @@
 
 </body>
 </html>
+Datihan-aligned.html
+HTML
