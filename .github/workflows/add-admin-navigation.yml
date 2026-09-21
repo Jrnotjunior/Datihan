@@ -1,0 +1,42 @@
+name: Add Admin Navigation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-admin:
+    if: ${{ !contains(github.event.head_commit.message, '[admin-nav-auto]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add admin navigation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('admin.html')
+          s = p.read_text(encoding='utf-8')
+          css = '''
+.admin-nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 20px;padding:10px;border:1px solid var(--line);background:#f8f8f5}.admin-nav a,.admin-nav button{display:inline-block;text-decoration:none;border:1px solid #333;border-radius:0;padding:10px 14px;cursor:pointer;font-family:inherit;font-weight:700;background:#f6f5f1;color:#171717}.admin-nav a.active{background:#171717;color:#fff}.admin-nav .store-link{background:#067647;color:#fff;border-color:#067647}.admin-nav .owner-link{background:#c69a2c;color:#171717;border-color:#c69a2c}.admin-nav .nav-signout{background:#b42318;color:#fff;border-color:#b42318}.admin-nav .nav-label{font-size:11px;letter-spacing:1px;margin-right:4px;color:#555;text-transform:uppercase}@media(max-width:650px){.admin-nav{display:grid;grid-template-columns:1fr 1fr}.admin-nav .nav-label{grid-column:1/-1}.admin-nav a,.admin-nav button{text-align:center;width:100%}}
+'''
+          if '.admin-nav{' not in s:
+              s = s.replace('</style>', css + '</style>', 1)
+          nav = '''<nav class="admin-nav" aria-label="Admin navigation"><span class="nav-label">Quick Navigation</span><a class="active" href="admin.html">Dashboard</a><a class="store-link" href="index.html">View Store</a><a class="owner-link" href="shop-owner.html">Inventory / Shop Owner</a><button type="button" class="nav-signout" onclick="document.getElementById('signOutBtn')?.click()">Sign Out</button></nav>'''
+          if 'class="admin-nav"' not in s:
+              s = s.replace('<div id="message" class="message"></div>', nav + '\n<div id="message" class="message"></div>', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit changes and remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add admin.html
+          git commit -m "Add admin navigation [admin-nav-auto]" || true
+          git push
+          rm -f .github/workflows/add-admin-navigation.yml
+          git add -u .github/workflows/add-admin-navigation.yml
+          git commit -m "Remove one-time admin navigation workflow [admin-nav-auto]" || true
+          git push
