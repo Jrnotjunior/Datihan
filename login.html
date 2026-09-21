@@ -10,38 +10,17 @@
 </head>
 <body>
 <main class="box">
-<div class="brand">DATIHAN THRIFT SHOP</div>
-<h1>LOGIN</h1>
-<div id="msg" class="msg"></div>
-<form id="loginForm">
-<div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" required></div>
-<div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div>
-<button type="submit" id="loginBtn">SIGN IN</button>
-</form>
-<div class="hint">Your account role determines where Datihan sends you: Buyer → Store, Shop Owner → Inventory, Admin → Administration.</div>
-<a class="store" href="index.html">Continue to Store</a>
+<div class="brand">DATIHAN THRIFT SHOP</div><h1>LOGIN</h1><div id="msg" class="msg"></div>
+<form id="loginForm"><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" required></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div><button type="submit" id="loginBtn">SIGN IN</button></form>
+<div class="hint">Your account role determines where Datihan sends you: Buyer → Store, Shop Owner → Inventory, Admin → Administration.</div><a class="store" href="index.html">Continue to Store</a>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
-const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const msg=document.getElementById('msg');
+const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const msg=document.getElementById('msg');
 function show(t){msg.textContent=t;msg.classList.add('show')}
-async function routeUser(user){
-  const {data,error}=await sb.from('profiles').select('role').eq('id',user.id).single();
-  if(error){show('Login worked, but the role profile is not ready yet. Run supabase_roles.sql in Supabase SQL Editor.');return}
-  if(data.role==='admin') location.href='admin.html';
-  else if(data.role==='shop_owner') location.href='admin.html';
-  else location.href='index.html';
-}
-document.getElementById('loginForm').addEventListener('submit',async e=>{
- e.preventDefault();msg.classList.remove('show');const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='SIGNING IN...';
- const {data,error}=await sb.auth.signInWithPassword({email:email.value.trim(),password:password.value});
- if(error) show(error.message); else await routeUser(data.user);
- btn.disabled=false;btn.textContent='SIGN IN';
-});
-(async()=>{const {data}=await sb.auth.getSession();if(data.session) await routeUser(data.session.user)})();
+async function routeUser(user){const{data,error}=await sb.from('profiles').select('role').eq('id',user.id).single();if(error){show('Login worked, but the role profile is not ready yet.');return}if(data.role==='admin')location.href='admin.html';else if(data.role==='shop_owner')location.href='shop-owner.html';else location.href='index.html'}
+document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();msg.classList.remove('show');const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='SIGNING IN...';const{data,error}=await sb.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});if(error)show(error.message);else await routeUser(data.user);btn.disabled=false;btn.textContent='SIGN IN'});
+(async()=>{const{data}=await sb.auth.getSession();if(data.session)await routeUser(data.session.user)})();
 </script>
 </body>
 </html>
