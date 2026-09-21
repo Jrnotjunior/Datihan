@@ -178,7 +178,14 @@ function closeModal(){document.getElementById('modalBackdrop').classList.remove(
 async function saveItem(e){e.preventDefault();const p={item_code:itemCode.value.trim(),name:itemName.value.trim(),category:category.value.trim()||null,size:size.value.trim()||null,condition:condition.value.trim()||null,price:Number(price.value),image_url:imageUrl.value.trim()||null,consignor_id:consignorId.value.trim()||null};saveBtn.disabled=true;
 const r=editingId?await supabaseClient.from('inventory').update(p).eq('id',editingId):await supabaseClient.from('inventory').insert(p);saveBtn.disabled=false;if(r.error){showMessage(r.error.message,'error');return}closeModal();showMessage(editingId?'Item updated.':'Item added.');loadInventory()}
 window.editItem=id=>openModal(inventory.find(x=>x.id===id));
-window.toggleSold=async(id,status)=>{const u={status,sold_at:status==='sold'?new Date().toISOString():null};const{error}=await supabaseClient.from('inventory').update(u).eq('id',id);if(error){showMessage(error.message,'error');return}showMessage(status==='sold'?'Item marked sold.':'Item marked available.');loadInventory()};
+window.toggleSold=async(id,status)=>{
+  const updateData={status:status,sold_at:status==='sold'?new Date().toISOString():null};
+  const {data,error}=await supabaseClient.from('inventory').update(updateData).eq('id',id).select();
+  if(error){console.error('Mark sold error:',error);showMessage(error.message,'error');return}
+  console.log('Inventory updated:',data);
+  showMessage(status==='sold'?'Item marked SOLD.':'Item marked AVAILABLE.');
+  await loadInventory();
+};
 window.deleteItem=async id=>{const x=inventory.find(i=>i.id===id);if(!confirm(`Delete "${x?.name||'this item'}"?`))return;const{error}=await supabaseClient.from('inventory').delete().eq('id',id);if(error){showMessage(error.message,'error');return}showMessage('Item deleted.');loadInventory()};
 addBtn.onclick=()=>openModal();cancelBtn.onclick=closeModal;refreshBtn.onclick=loadInventory;search.oninput=render;statusFilter.onchange=render;itemForm.onsubmit=saveItem;modalBackdrop.onclick=e=>{if(e.target.id==='modalBackdrop')closeModal};
 const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.onload=()=>{supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);loadInventory()};document.head.appendChild(s);
