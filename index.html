@@ -134,6 +134,29 @@
   .item-card .add-btn[data-added="true"]{ background:var(--accent-2); color:var(--ink); }
   .item-card.sold-out .add-btn{ background:var(--line); color:var(--ink-soft); cursor:not-allowed; }
   .item-card.sold-out::after{ content:"Sold"; position:absolute; top:14px; left:14px; font-family:'IBM Plex Mono'; font-size:.65rem; background:var(--ink); color:var(--bg); padding:3px 8px; border-radius:2px; }
+  .item-card .view-btn{ margin-top:8px; width:100%; background:none; color:var(--ink); border:1px solid var(--line); padding:.55rem; font-weight:500; font-size:.82rem; cursor:pointer; border-radius:2px; }
+  .item-card .view-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .item-card .description-preview{ color:var(--ink-soft); font-size:.82rem; margin-top:9px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .product-backdrop{ position:fixed; inset:0; background:rgba(20,18,14,.58); z-index:95; display:none; align-items:center; justify-content:center; padding:20px; }
+  .product-backdrop.open{ display:flex; }
+  .product-modal{ width:min(900px,100%); max-height:min(90vh,900px); overflow:auto; background:var(--plate); color:var(--ink); border:1px solid var(--line); box-shadow:0 24px 70px var(--shadow); }
+  .product-modal-head{ display:flex; justify-content:space-between; align-items:center; gap:18px; padding:18px 22px; border-bottom:1px solid var(--line); position:sticky; top:0; background:color-mix(in srgb,var(--plate) 94%,transparent); backdrop-filter:blur(6px); z-index:2; }
+  .product-modal-head h2{ font-size:1.5rem; }
+  .product-close{ border:0; background:none; color:var(--ink); font-size:1.5rem; cursor:pointer; line-height:1; }
+  .product-modal-body{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr); gap:28px; padding:24px; }
+  .product-gallery-main{ width:100%; aspect-ratio:1/1; object-fit:cover; background:var(--panel); border:1px solid var(--line); }
+  .product-gallery-placeholder{ width:100%; aspect-ratio:1/1; background:var(--panel); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; }
+  .product-thumbs{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px; }
+  .product-thumb{ aspect-ratio:1; border:1px solid var(--line); background:var(--panel); padding:0; cursor:pointer; overflow:hidden; }
+  .product-thumb[aria-selected="true"]{ border:2px solid var(--accent); }
+  .product-thumb img{ width:100%; height:100%; object-fit:cover; }
+  .product-info .tag-font{ color:var(--ink-soft); font-size:.78rem; }
+  .product-info h3{ font-family:'Barlow Condensed'; text-transform:uppercase; font-size:2.2rem; line-height:1; margin:7px 0 12px; }
+  .product-info .product-price{ font-family:'IBM Plex Mono'; color:var(--accent); font-size:1.25rem; margin:14px 0; }
+  .product-info .product-meta{ color:var(--ink-soft); font-size:.9rem; padding:12px 0; border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); }
+  .product-info .product-description{ margin:18px 0; white-space:pre-wrap; color:var(--ink-soft); font-size:.92rem; }
+  .product-info .product-description strong{ display:block; color:var(--ink); font-family:'Barlow Condensed'; text-transform:uppercase; font-size:1rem; margin-bottom:6px; }
+  @media(max-width:760px){ .product-modal-body{ grid-template-columns:1fr; padding:16px; gap:20px; } .product-info h3{ font-size:1.9rem; } }
   .no-results{ color:var(--ink-soft); padding:40px 0; text-align:center; display:none; }
 
   .event-list{ display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line); }
@@ -550,6 +573,17 @@
   </div>
 </footer>
 
+<!-- PRODUCT DETAILS -->
+<div class="product-backdrop" id="productBackdrop" aria-hidden="true">
+  <section class="product-modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+    <div class="product-modal-head">
+      <h2 class="display" id="productModalTitle">Item details</h2>
+      <button class="product-close" id="closeProduct" aria-label="Close item details">&times;</button>
+    </div>
+    <div class="product-modal-body" id="productModalBody"></div>
+  </section>
+</div>
+
 <!-- CART DRAWER -->
 <div class="overlay-bg" id="overlayBg"></div>
 <div class="drawer" id="cartDrawer" aria-label="Shopping cart">
@@ -606,6 +640,16 @@
   // Anything marked "sold" in admin.html is hidden from the customer shop.
   let PRODUCTS = [];
 
+  function normalizeImageUrls(item){
+    const raw = item?.image_urls;
+    if(Array.isArray(raw)) return raw.filter(Boolean).slice(0,8);
+    if(typeof raw === 'string' && raw.trim()){
+      try{ const parsed = JSON.parse(raw); if(Array.isArray(parsed)) return parsed.filter(Boolean).slice(0,8); }catch(e){}
+      return raw.split(',').map(x => x.trim()).filter(Boolean).slice(0,8);
+    }
+    return item?.image_url ? [item.image_url] : [];
+  }
+
   async function loadProducts(){
     const { data, error } = await supabaseClient
       .from('inventory')
@@ -622,18 +666,23 @@
       return;
     }
 
-    PRODUCTS = (data || []).map(item => ({
-      id: String(item.id),
-      itemCode: item.item_code || String(item.id).slice(0,8).toUpperCase(),
-      name: item.name || 'Untitled item',
-      category: String(item.category || 'other').toLowerCase(),
-      size: item.size || 'One size',
-      condition: item.condition || 'Good condition',
-      price: Number(item.price || 0),
-      image: item.image_url || '',
-      badge: item.status === 'available' ? 'AVAILABLE' : '',
-      soldOut: item.status === 'sold'
-    }));
+    PRODUCTS = (data || []).map(item => {
+      const images = normalizeImageUrls(item);
+      return {
+        id: String(item.id),
+        itemCode: item.item_code || String(item.id).slice(0,8).toUpperCase(),
+        name: item.name || 'Untitled item',
+        category: String(item.category || 'other').toLowerCase(),
+        size: item.size || 'One size',
+        condition: item.condition || 'Good condition',
+        price: Number(item.price || 0),
+        image: images[0] || '',
+        images,
+        description: item.description || '',
+        badge: item.status === 'available' ? 'AVAILABLE' : '',
+        soldOut: item.status === 'sold'
+      };
+    });
 
     noResults.textContent = 'Nothing matches that search yet — try a different keyword or category.';
     renderShopGrid();
@@ -705,7 +754,7 @@
     const q = searchInput.value.trim().toLowerCase();
     const visible = PRODUCTS.filter(p => {
       const matchesCat = activeFilter === 'all' || p.category === activeFilter;
-      const matchesText = !q || p.name.toLowerCase().includes(q) || p.category.includes(q);
+      const matchesText = !q || p.name.toLowerCase().includes(q) || p.category.includes(q) || p.itemCode.toLowerCase().includes(q);
       return matchesCat && matchesText;
     });
     shopGrid.innerHTML = visible.map(p => {
@@ -720,22 +769,25 @@
       const safeSize = escapeHtml(p.size);
       const safeCondition = escapeHtml(p.condition);
       const safeCode = escapeHtml(p.itemCode);
+      const desc = p.description ? '<div class="description-preview">'+escapeHtml(p.description)+'</div>' : '';
       return '<div class="item-card'+(p.soldOut?' sold-out':'')+'" data-id="'+escapeHtml(p.id)+'">'
-        + badge
-        + media
-        + '<h3>'+safeName+'</h3>'
-        + '<div class="meta">'+safeSize+' · '+safeCondition+' · '+safeCategory+'</div>'
+        + badge + media + '<h3>'+safeName+'</h3>'
+        + '<div class="meta">'+safeSize+' · '+safeCondition+' · '+safeCategory+'</div>' + desc
         + '<div class="price"><span class="tag-font">#'+safeCode+'</span><span class="amt">'+peso(p.price)+'</span></div>'
+        + '<button class="view-btn" data-view="'+escapeHtml(p.id)+'">View details'+(p.images.length>1?' · '+p.images.length+' photos':'')+'</button>'
         + '<button class="add-btn" data-add="'+escapeHtml(p.id)+'" '+(p.soldOut?'disabled':'')+'>'+(p.soldOut ? 'Sold out' : (inCart ? 'Added ('+inCart+') · Add another' : 'Add to cart'))+'</button>'
         + '</div>';
     }).join('');
     noResults.style.display = visible.length === 0 ? 'block' : 'none';
 
     shopGrid.querySelectorAll('[data-add]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        addToCart(btn.dataset.add);
-        renderShopGrid();
-      });
+      btn.addEventListener('click', event => { event.stopPropagation(); addToCart(btn.dataset.add); renderShopGrid(); });
+    });
+    shopGrid.querySelectorAll('[data-view]').forEach(btn => {
+      btn.addEventListener('click', event => { event.stopPropagation(); openProductDetails(btn.dataset.view); });
+    });
+    shopGrid.querySelectorAll('.item-card').forEach(card => {
+      card.addEventListener('click', event => { if(event.target.closest('button')) return; openProductDetails(card.dataset.id); });
     });
   }
 
@@ -748,6 +800,23 @@
       renderShopGrid();
     });
   });
+
+  // ---------------- PRODUCT DETAILS / PHOTO GALLERY ----------------
+  const productBackdrop = document.getElementById('productBackdrop');
+  const productModalBody = document.getElementById('productModalBody');
+  const closeProduct = document.getElementById('closeProduct');
+  function openProductDetails(id){
+    const p=findProduct(id); if(!p)return;
+    const images=p.images||(p.image?[p.image]:[]), safeName=escapeHtml(p.name), safeCode=escapeHtml(p.itemCode);
+    const gallery=images[0]?'<img id="productMainImage" class="product-gallery-main" src="'+escapeHtml(images[0])+'" alt="'+safeName+'">':'<div class="product-gallery-placeholder">'+iconSvg(p.category)+'</div>';
+    const thumbs=images.length>1?'<div class="product-thumbs">'+images.map((url,i)=>'<button class="product-thumb" type="button" aria-selected="'+(i===0?'true':'false')+'" data-gallery-url="'+escapeHtml(url)+'"><img src="'+escapeHtml(url)+'" alt="Photo '+(i+1)+' of '+safeName+'"></button>').join('')+'</div>':'';
+    productModalBody.innerHTML='<div><div id="productGalleryMain">'+gallery+'</div>'+thumbs+'</div><div class="product-info"><div class="tag-font">#'+safeCode+'</div><h3>'+safeName+'</h3><div class="product-price">'+peso(p.price)+'</div><div class="product-meta">'+escapeHtml(p.size)+' · '+escapeHtml(p.condition)+' · '+escapeHtml(p.category)+'</div><div class="product-description"><strong>Description / Issues / Notes</strong>'+escapeHtml(p.description||'No additional notes were provided for this item.')+'</div><button class="btn btn-primary" id="productAddBtn" '+(p.soldOut?'disabled':'')+' style="width:100%;">'+(p.soldOut?'Sold out':(cart[p.id]?'Add another to cart':'Add to cart'))+'</button></div>';
+    productBackdrop.classList.add('open'); productBackdrop.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+    productModalBody.querySelectorAll('[data-gallery-url]').forEach(btn=>btn.addEventListener('click',()=>{const main=document.getElementById('productMainImage');if(main)main.src=btn.dataset.galleryUrl;productModalBody.querySelectorAll('[data-gallery-url]').forEach(x=>x.setAttribute('aria-selected',x===btn?'true':'false'));}));
+    const addBtn=document.getElementById('productAddBtn'); if(addBtn&&!p.soldOut)addBtn.addEventListener('click',()=>{addToCart(p.id);renderShopGrid();openProductDetails(p.id);});
+  }
+  function closeProductDetails(){productBackdrop.classList.remove('open');productBackdrop.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+  closeProduct.addEventListener('click',closeProductDetails); productBackdrop.addEventListener('click',e=>{if(e.target===productBackdrop)closeProductDetails();});
 
   // ---------------- TABS ----------------
   const tabs = document.querySelectorAll('[data-tab]');
@@ -1147,7 +1216,9 @@
     if(event.target === authBackdrop) closeAuth();
   });
   document.addEventListener('keydown', event => {
-    if(event.key === 'Escape' && authBackdrop.classList.contains('open')) closeAuth();
+    if(event.key !== 'Escape') return;
+    if(productBackdrop.classList.contains('open')) closeProductDetails();
+    if(authBackdrop.classList.contains('open')) closeAuth();
   });
 
   // Supabase session changes keep the header account state in sync.
