@@ -178,12 +178,14 @@ function closeModal(){document.getElementById('modalBackdrop').classList.remove(
 async function saveItem(e){e.preventDefault();const p={item_code:itemCode.value.trim(),name:itemName.value.trim(),category:category.value.trim()||null,size:size.value.trim()||null,condition:condition.value.trim()||null,price:Number(price.value),image_url:imageUrl.value.trim()||null,consignor_id:consignorId.value.trim()||null};saveBtn.disabled=true;
 const r=editingId?await supabaseClient.from('inventory').update(p).eq('id',editingId):await supabaseClient.from('inventory').insert(p);saveBtn.disabled=false;if(r.error){showMessage(r.error.message,'error');return}closeModal();showMessage(editingId?'Item updated.':'Item added.');loadInventory()}
 window.editItem=id=>openModal(inventory.find(x=>x.id===id));
-window.toggleSold=async(id,status)=>{
-  const updateData={status:status,sold_at:status==='sold'?new Date().toISOString():null};
-  const {data,error}=await supabaseClient.from('inventory').update(updateData).eq('id',id).select();
-  if(error){console.error('Mark sold error:',error);showMessage(error.message,'error');return}
-  console.log('Inventory updated:',data);
-  showMessage(status==='sold'?'Item marked SOLD.':'Item marked AVAILABLE.');
+window.toggleSold = async (id, status) => {
+  const updateData = { status: status, sold_at: status === 'sold' ? new Date().toISOString() : null };
+  console.log('Updating inventory:', id, updateData);
+  const { data, error } = await supabaseClient.from('inventory').update(updateData).eq('id', id).select('*');
+  if (error) { console.error('STATUS UPDATE FAILED:', error); showMessage('Could not update status: ' + error.message, 'error'); return; }
+  if (!data || data.length === 0) { console.error('No row was updated. Check UPDATE policy.'); showMessage('No item was updated. Check Supabase UPDATE permissions.', 'error'); return; }
+  console.log('STATUS UPDATE SUCCESS:', data);
+  showMessage(status === 'sold' ? 'Item marked SOLD.' : 'Item marked AVAILABLE.');
   await loadInventory();
 };
 window.deleteItem=async id=>{const x=inventory.find(i=>i.id===id);if(!confirm(`Delete "${x?.name||'this item'}"?`))return;const{error}=await supabaseClient.from('inventory').delete().eq('id',id);if(error){showMessage(error.message,'error');return}showMessage('Item deleted.');loadInventory()};
