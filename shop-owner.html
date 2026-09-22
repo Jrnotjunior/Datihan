@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Datihan Shop Owner</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 :root{--ink:#171717;--paper:#f1f0ec;--panel:#f8f8f5;--line:#c9c9c3;--red:#b42318}
@@ -418,23 +417,64 @@ $('modalTitle').addEventListener('pointercancel',()=>dragging=false);
 
 (async()=>{
   try{
-    if(!window.supabase){throw new Error('Supabase library did not load. Please check your internet connection or GitHub Pages deployment.');}
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
-    if(userError) throw userError;
-    if(!user){location.href='login.html';return}
-    const {data:profile,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
-    if(error) throw error;
-    if(!['shop_owner','admin'].includes(profile?.role)){
-      location.href=profile?.role==='admin'?'admin.html':'index.html';return;
+    console.log('Shop Owner: starting initialization...');
+
+    if(!window.supabase){
+      throw new Error('Supabase library did not load.');
     }
+
+    console.log('Shop Owner: Supabase library loaded.');
+
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+    console.log('Shop Owner: Supabase client created.');
+
+    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+
+    if(userError) throw userError;
+
+    console.log('Shop Owner: current user:',user);
+
+    if(!user){
+      console.log('Shop Owner: no logged-in user.');
+      location.href='login.html';
+      return;
+    }
+
+    const {data:profile,error:profileError}=await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id',user.id)
+      .single();
+
+    if(profileError) throw profileError;
+
+    console.log('Shop Owner: profile:',profile);
+
+    if(!['shop_owner','admin'].includes(profile?.role)){
+      console.log('Shop Owner: unauthorized role:',profile?.role);
+      location.href=profile?.role==='admin'?'admin.html':'index.html';
+      return;
+    }
+
+    console.log('Shop Owner: authorized.');
+
     await loadInventory();
+
+    console.log('Shop Owner: inventory loaded.');
+
   }catch(err){
-    console.error('Shop Owner initialization failed:',err);
+    console.error('SHOP OWNER INITIALIZATION ERROR:',err);
+
     const box=document.createElement('div');
-    box.style='max-width:760px;margin:80px auto;padding:24px;border:1px solid #b42318;background:#fff7f6;color:#9b241a;font-family:Courier New,monospace;line-height:1.6';
-    box.innerHTML='<h2 style="margin-top:0">Shop Owner page could not load</h2><p>'+esc(err?.message||err)+'</p><p>Open F12 → Console for the full error.</p>';
-    document.body.innerHTML='';document.body.appendChild(box);
+    box.style.cssText='max-width:760px;margin:40px auto;padding:24px;border:1px solid #b42318;background:#fff7f6;color:#9b241a;font-family:"Courier New",monospace;line-height:1.6;';
+    box.innerHTML=`
+      <h2 style="margin-top:0">Shop Owner page could not load</h2>
+      <p><strong>Error:</strong> ${esc(err?.message||err)}</p>
+      <p>Open F12 → Console to see the detailed error.</p>
+      <button onclick="location.reload()" style="padding:10px 16px;border:1px solid #333;background:#171717;color:white;cursor:pointer;font-family:inherit">Reload Page</button>
+    `;
+    document.body.appendChild(box);
   }
 })();
 </script>
