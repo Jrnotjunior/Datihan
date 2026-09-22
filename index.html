@@ -1315,7 +1315,7 @@
     if(!user){
       authBtn.textContent = 'Login';
       authBtn.classList.remove('logged-in');
-      authBtn.onclick = openAuth;
+      authBtn.onclick = () => { location.href = 'login.html'; };
       roleNavBtn.classList.remove('show');
       roleNavBtn.textContent = '';
       roleNavBtn.onclick = null;
@@ -1379,7 +1379,6 @@
     openAuth();
   }
 
-  authBtn.addEventListener('click', openAuth);
   authClose.addEventListener('click', closeAuth);
   authBackdrop.addEventListener('click', event => {
     if(event.target === authBackdrop) closeAuth();
