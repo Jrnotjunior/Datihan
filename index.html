@@ -153,8 +153,8 @@
   .split-panel p{ max-width:36ch; opacity:.85; }
   .split-panel .btn-primary{ background:var(--accent-2); color:var(--ink); }
 
-  .about-grid{ display:block; }
-  .about-grid .content-measure{ max-width:78ch; }
+  .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:52px; align-items:start; }
+  @media (max-width:860px){ .about-grid{ grid-template-columns:1fr; } }
   .about-grid p + p{ margin-top:14px; }
   .impact{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .impact .box{ border:1px solid var(--line); padding:18px; background:var(--panel); }
@@ -663,16 +663,22 @@
   function peso(n){ return '\u20B1' + n.toLocaleString('en-PH'); }
   function findProduct(id){ return PRODUCTS.find(p => p.id === id); }
 
-  // ---------------- CART (per-browser, localStorage) ----------------
-  const CART_KEY = 'datihan_cart_v1';
+  // ---------------- CART (account-based, localStorage) ----------------
+  // Each buyer account has its own cart, even when multiple buyers use the same browser.
+  let currentUserId = null;
+  function cartStorageKey(userId){
+    return 'datihan_cart_user_v2_' + encodeURIComponent(String(userId));
+  }
   function loadCart(){
-    try{ return JSON.parse(localStorage.getItem(CART_KEY)) || {}; }
+    if(!currentUserId) return {};
+    try{ return JSON.parse(localStorage.getItem(cartStorageKey(currentUserId))) || {}; }
     catch(e){ return {}; }
   }
   function saveCart(cart){
-    try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(e){}
+    if(!currentUserId) return;
+    try{ localStorage.setItem(cartStorageKey(currentUserId), JSON.stringify(cart)); }catch(e){}
   }
-  let cart = loadCart(); // { productId: qty }
+  let cart = {}; // { productId: qty } for the currently signed-in account
 
   function cartCount(){
     return Object.values(cart).reduce((a,b) => a+b, 0);
@@ -689,8 +695,10 @@
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user){
-      pendingAddToCartId = id;
-      showAddToCartAuthChoice();
+      // Remember the exact item, then use the real login.html page.
+      // login.html attaches this item to the signed-in buyer's account cart.
+      localStorage.setItem('datihan_pending_add_to_cart', String(id));
+      location.href = 'login.html';
       return;
     }
 
@@ -1097,18 +1105,6 @@
     }
   }
 
-  function showAddToCartAuthChoice(){
-    authTitle.textContent = 'Login required to add to cart';
-    authBody.innerHTML = `
-      <p class="auth-copy">Please sign in or create a Datihan account before adding an item. Your cart will be preserved after you sign in.</p>
-      <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
-      <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
-      <p class="auth-message">You can browse the store without an account. An account is required to keep your cart connected to you.</p>`;
-    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => showEmailStep('Sign in to your Datihan account to continue.'));
-    document.getElementById('newCartBuyerBtn').addEventListener('click', showSignupStep);
-    openAuth();
-  }
-
   function showCheckoutAuthChoice(){
     authTitle.textContent = 'Login required to checkout';
     authBody.innerHTML = `
@@ -1312,10 +1308,17 @@
 
   async function refreshAuthUI(){
     const { data: { user } } = await supabaseClient.auth.getUser();
+    const nextUserId = user?.id || null;
+    if(currentUserId !== nextUserId){
+      currentUserId = nextUserId;
+      cart = loadCart();
+      renderCartBadge();
+      renderCartDrawer();
+    }
     if(!user){
       authBtn.textContent = 'Login';
       authBtn.classList.remove('logged-in');
-      authBtn.onclick = openAuth;
+      authBtn.onclick = () => { location.href = 'login.html'; };
       roleNavBtn.classList.remove('show');
       roleNavBtn.textContent = '';
       roleNavBtn.onclick = null;
@@ -1379,7 +1382,6 @@
     openAuth();
   }
 
-  authBtn.addEventListener('click', openAuth);
   authClose.addEventListener('click', closeAuth);
   authBackdrop.addEventListener('click', event => {
     if(event.target === authBackdrop) closeAuth();
@@ -1394,11 +1396,13 @@
   });
 
   // ---------------- INIT ----------------
-  refreshAuthUI();
-  renderCartBadge();
-  openCheckoutAfterLogin();
-  loadProducts();
-  loadPopups();
+  (async()=>{
+    await refreshAuthUI();
+    renderCartBadge();
+    openCheckoutAfterLogin();
+    loadProducts();
+    loadPopups();
+  })();
 </script>
 
 </body>
