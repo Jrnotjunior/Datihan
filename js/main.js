@@ -53,16 +53,57 @@
   function peso(n){ return '\u20B1' + n.toLocaleString('en-PH'); }
   function findProduct(id){ return PRODUCTS.find(p => p.id === id); }
 
-  // ---------------- CART (per-browser, localStorage) ----------------
-  const CART_KEY = 'datihan_cart_v1';
-  function loadCart(){
-    try{ return JSON.parse(localStorage.getItem(CART_KEY)) || {}; }
-    catch(e){ return {}; }
+  // ---------------- CART (ACCOUNT-BASED / SUPABASE) ----------------
+  // Cart data is never stored in browser localStorage. Each authenticated
+  // buyer has an isolated cart identified by their Supabase auth user id.
+  let cart = {};
+  let cartUserId = null;
+
+  async function loadCartForUser(user){
+    cart = {};
+    cartUserId = user ? user.id : null;
+    if(!user){ renderCartBadge(); return; }
+
+    const { data, error } = await supabaseClient
+      .from('cart_items')
+      .select('product_id,quantity')
+      .eq('user_id', user.id);
+
+    if(error){
+      console.error('Could not load account cart:', error);
+      renderCartBadge();
+      return;
+    }
+
+    (data || []).forEach(row => {
+      cart[String(row.product_id)] = Number(row.quantity) || 0;
+    });
+    renderCartBadge();
   }
-  function saveCart(cart){
-    try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(e){}
+
+  async function saveCartItem(productId, quantity){
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return false;
+
+    if(quantity <= 0){
+      const { error } = await supabaseClient
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productId);
+      if(error){ console.error('Could not remove cart item:', error); return false; }
+      return true;
+    }
+
+    const { error } = await supabaseClient
+      .from('cart_items')
+      .upsert(
+        { user_id:user.id, product_id:productId, quantity },
+        { onConflict:'user_id,product_id' }
+      );
+    if(error){ console.error('Could not save cart item:', error); return false; }
+    return true;
   }
-  let cart = loadCart(); // { productId: qty }
 
   function cartCount(){
     return Object.values(cart).reduce((a,b) => a+b, 0);
@@ -73,6 +114,36 @@
       return sum + (p ? p.price*qty : 0);
     }, 0);
   }
+
+  function getAddToCartRedirect(page,id){
+    return page + '?add=' + encodeURIComponent(id);
+  }
+
+  function showAddToCartAuthChoice(){
+    const modal = document.getElementById('addAuthModal');
+    if(!modal){
+      if(pendingAddToCartId) location.href = getAddToCartRedirect('login.html', pendingAddToCartId);
+      return;
+    }
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    const login = document.getElementById('addAuthLogin');
+    const signup = document.getElementById('addAuthSignup');
+    const close = document.getElementById('addAuthClose');
+    if(login) login.onclick = () => {
+      if(pendingAddToCartId) location.href = getAddToCartRedirect('login.html', pendingAddToCartId);
+    };
+    if(signup) signup.onclick = () => {
+      if(pendingAddToCartId) location.href = getAddToCartRedirect('signup.html', pendingAddToCartId);
+    };
+    if(close) close.onclick = () => {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+      pendingAddToCartId = null;
+    };
+  }
+
   async function addToCart(id){
     const p = findProduct(id);
     if(!p || p.soldOut) return;
@@ -84,18 +155,27 @@
       return;
     }
 
-    cart[id] = (cart[id]||0) + 1;
-    saveCart(cart);
-    renderCartBadge();
-    renderCartDrawer();
+    if(cartUserId !== user.id) await loadCartForUser(user);
+    const next = (cart[id] || 0) + 1;
+    if(await saveCartItem(id,next)){
+      cart[id] = next;
+      renderCartBadge();
+      renderCartDrawer();
+    }
   }
-  function setQty(id, qty){
-    if(qty <= 0){ delete cart[id]; }
-    else { cart[id] = qty; }
-    saveCart(cart);
-    renderCartBadge();
-    renderCartDrawer();
+
+  async function setQty(id, qty){
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
+    if(await saveCartItem(id,qty)){
+      if(qty <= 0) delete cart[id];
+      else cart[id] = qty;
+      renderCartBadge();
+      renderCartDrawer();
+    }
   }
+
+  let pendingAddToCartId = null;
 
   function renderCartBadge(){
     const n = cartCount();
@@ -304,7 +384,13 @@
   document.getElementById('closeCart').addEventListener('click', closeDrawers);
   document.getElementById('closeCheckout').addEventListener('click', closeDrawers);
 
-  document.getElementById('cartBtn').addEventListener('click', () => {
+  document.getElementById('cartBtn').addEventListener('click', async () => {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user){
+      openCheckout();
+      return;
+    }
+    if(cartUserId !== user.id) await loadCartForUser(user);
     renderCartDrawer();
     openDrawer(cartDrawer);
   });
@@ -385,6 +471,7 @@
       openDrawer(checkoutDrawer);
       return;
     }
+    if(cartUserId !== user.id) await loadCartForUser(user);
     checkoutProfile = user;
     renderCheckoutForm(user);
     openDrawer(checkoutDrawer);
@@ -420,6 +507,7 @@
       return;
     }
 
+    if(cartUserId !== user.id) await loadCartForUser(user);
     const orderItems = Object.entries(cart).map(([id,qty]) => ({
       product_id: id,
       quantity: qty,
@@ -445,8 +533,18 @@
       return;
     }
 
-    cart = {};
-    saveCart(cart);
+    const { error: clearError } = await supabaseClient
+      .from('cart_items')
+      .delete()
+      .eq('user_id', user.id);
+    if(clearError){
+      message.textContent = clearError.message;
+      message.className = 'auth-message error';
+      btn.disabled = false;
+      return;
+    }
+
+    await loadCartForUser(user);
     renderCartBadge();
     renderCartDrawer();
     message.textContent = 'Order placed successfully.';
@@ -549,6 +647,9 @@
       authBtn.classList.add('signed-in');
       authBtn.onclick = async () => {
         await supabaseClient.auth.signOut();
+        cart = {};
+        cartUserId = null;
+        renderCartBadge();
         location.href = 'index.html';
       };
       const {data:profile}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
@@ -570,8 +671,30 @@
   }
 
   // ---------------- INIT ----------------
-  refreshAuthUI();
-  renderCartBadge();
-  openCheckoutAfterLogin();
-  loadProducts();
-  loadPopups();
+  async function handlePendingCartFromUrl(){
+    const params = new URLSearchParams(location.search);
+    const pendingId = params.get('add');
+    if(!pendingId) return;
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
+    const p = findProduct(pendingId);
+    if(!p || p.soldOut) return;
+    if(cartUserId !== user.id) await loadCartForUser(user);
+    const next = (cart[pendingId] || 0) + 1;
+    if(await saveCartItem(pendingId,next)){
+      cart[pendingId] = next;
+      renderCartBadge();
+      renderCartDrawer();
+      history.replaceState({}, document.title, location.pathname);
+    }
+  }
+
+  (async()=>{
+    await refreshAuthUI();
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    await loadCartForUser(user);
+    renderCartBadge();
+    await loadProducts();
+    await handlePendingCartFromUrl();
+    loadPopups();
+  })();
