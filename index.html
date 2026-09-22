@@ -695,10 +695,10 @@
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user){
-      // Remember the exact item, then use the real login.html page.
-      // login.html attaches this item to the signed-in buyer's account cart.
+      // Keep the exact item pending while the buyer chooses how to authenticate.
+      // Existing buyers go to login.html; new buyers go to signup.html.
       localStorage.setItem('datihan_pending_add_to_cart', String(id));
-      location.href = 'login.html';
+      showAddToCartAuthChoice();
       return;
     }
 
@@ -1103,6 +1103,22 @@
       renderCheckoutForm();
       openDrawer(checkoutDrawer);
     }
+  }
+
+  function showAddToCartAuthChoice(){
+    authTitle.textContent = 'Login required to add to cart';
+    authBody.innerHTML = `
+      <p class="auth-copy">Please sign in or create a Datihan buyer account before adding this item. Your cart will be preserved after you sign in.</p>
+      <button class="btn btn-primary auth-submit" type="button" id="existingBuyerBtn">I already have an account</button>
+      <button class="btn btn-outline auth-submit" type="button" id="newBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
+      <p class="auth-message">You can continue browsing without an account. An account is required to keep your cart connected to you.</p>`;
+    document.getElementById('existingBuyerBtn').addEventListener('click', ()=>{
+      location.href='login.html';
+    });
+    document.getElementById('newBuyerBtn').addEventListener('click', ()=>{
+      location.href='signup.html';
+    });
+    openAuth();
   }
 
   function showCheckoutAuthChoice(){
