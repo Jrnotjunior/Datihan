@@ -153,8 +153,8 @@
   .split-panel p{ max-width:36ch; opacity:.85; }
   .split-panel .btn-primary{ background:var(--accent-2); color:var(--ink); }
 
-  .about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:52px; align-items:start; }
-  @media (max-width:860px){ .about-grid{ grid-template-columns:1fr; } }
+  .about-grid{ display:block; }
+  .about-grid .content-measure{ max-width:78ch; }
   .about-grid p + p{ margin-top:14px; }
   .impact{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .impact .box{ border:1px solid var(--line); padding:18px; background:var(--panel); }
@@ -1104,18 +1104,8 @@
       <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
       <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
       <p class="auth-message">You can browse the store without an account. An account is required to keep your cart connected to you.</p>`;
-    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => {
-      if(pendingAddToCartId){
-        localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
-      }
-      location.href = 'login.html';
-    });
-    document.getElementById('newCartBuyerBtn').addEventListener('click', () => {
-      if(pendingAddToCartId){
-        localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
-      }
-      location.href = 'signup.html';
-    });
+    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => showEmailStep('Sign in to your Datihan account to continue.'));
+    document.getElementById('newCartBuyerBtn').addEventListener('click', showSignupStep);
     openAuth();
   }
 
@@ -1325,7 +1315,7 @@
     if(!user){
       authBtn.textContent = 'Login';
       authBtn.classList.remove('logged-in');
-      authBtn.onclick = () => { location.href = 'login.html'; };
+      authBtn.onclick = openAuth;
       roleNavBtn.classList.remove('show');
       roleNavBtn.textContent = '';
       roleNavBtn.onclick = null;
@@ -1389,6 +1379,7 @@
     openAuth();
   }
 
+  authBtn.addEventListener('click', openAuth);
   authClose.addEventListener('click', closeAuth);
   authBackdrop.addEventListener('click', event => {
     if(event.target === authBackdrop) closeAuth();
