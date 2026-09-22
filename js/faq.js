@@ -107,3 +107,65 @@ document.querySelectorAll('.faq-q').forEach(btn => {
     }).catch(()=>openModal(button.dataset.add));
   },true);
 })();
+
+// ---------------- SHOP OWNER PUBLIC SHOP VIEW-ONLY ----------------
+// The public index page is also used by Shop Owners through the "View Store"
+// button. Shop Owners may browse listings, but they must not see or use buyer
+// controls such as Cart, Add to Cart, Checkout, or My Orders.
+(function(){
+  const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
+  const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
+  const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+  function hideBuyerOrderControls(isShopOwner){
+    if(!isShopOwner) return;
+
+    const cart=document.getElementById('cartBtn');
+    if(cart){
+      cart.style.display='none';
+      cart.setAttribute('aria-hidden','true');
+    }
+
+    document.querySelectorAll('button, a').forEach(el=>{
+      const label=(el.textContent||'').trim().replace(/\s+/g,' ').toLowerCase();
+      const href=(el.getAttribute('href')||'').toLowerCase();
+      const isOrderControl =
+        label === 'my orders' ||
+        label === 'orders' ||
+        href.includes('my-orders') ||
+        href.endsWith('/orders.html') ||
+        href.includes('/orders.html?');
+
+      if(isOrderControl){
+        el.remove();
+      }
+    });
+
+    document.querySelectorAll('[data-add], .add-btn').forEach(el=>el.remove());
+  }
+
+  async function applyShopOwnerMode(){
+    try{
+      const {data:{user}}=await client.auth.getUser();
+      if(!user) return;
+
+      const {data:profile}=await client
+        .from('profiles')
+        .select('role')
+        .eq('id',user.id)
+        .single();
+
+      if(profile?.role === 'shop_owner'){
+        hideBuyerOrderControls(true);
+      }
+    }catch(err){
+      console.error('Shop owner public view-only mode failed:',err);
+    }
+  }
+
+  // Run once now and again after dynamic UI/auth rendering.
+  applyShopOwnerMode();
+  window.addEventListener('load', applyShopOwnerMode);
+  setTimeout(applyShopOwnerMode, 1000);
+  setTimeout(applyShopOwnerMode, 2500);
+})();
