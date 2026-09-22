@@ -108,64 +108,80 @@ document.querySelectorAll('.faq-q').forEach(btn => {
   },true);
 })();
 
-// ---------------- SHOP OWNER PUBLIC SHOP VIEW-ONLY ----------------
-// The public index page is also used by Shop Owners through the "View Store"
-// button. Shop Owners may browse listings, but they must not see or use buyer
-// controls such as Cart, Add to Cart, Checkout, or My Orders.
+// ---------------- SHOP OWNER VIEW-ONLY MODE ----------------
+// Shop Owners can use View Store to inspect the public catalog, but they are
+// not buyers. Therefore Cart, Add to Cart, Checkout, and My Orders are hidden.
 (function(){
   const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
   const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
   const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-  function hideBuyerOrderControls(isShopOwner){
-    if(!isShopOwner) return;
-
-    const cart=document.getElementById('cartBtn');
-    if(cart){
-      cart.style.display='none';
-      cart.setAttribute('aria-hidden','true');
-    }
-
-    document.querySelectorAll('button, a').forEach(el=>{
-      const label=(el.textContent||'').trim().replace(/\s+/g,' ').toLowerCase();
-      const href=(el.getAttribute('href')||'').toLowerCase();
-      const isOrderControl =
-        label === 'my orders' ||
-        label === 'orders' ||
-        href.includes('my-orders') ||
-        href.endsWith('/orders.html') ||
-        href.includes('/orders.html?');
-
-      if(isOrderControl){
-        el.remove();
-      }
+  function removeBuyerControls(){
+    // Cart button/icon.
+    document.querySelectorAll('#cartBtn, .cart-btn, [aria-label="Open cart"]').forEach(el=>{
+      el.remove();
     });
 
-    document.querySelectorAll('[data-add], .add-btn').forEach(el=>el.remove());
+    // Remove My Orders / Orders regardless of whether they are buttons, links,
+    // generated dynamically, or contain extra whitespace/icons.
+    document.querySelectorAll('a,button,[role="button"]').forEach(el=>{
+      const text=(el.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+      const href=(el.getAttribute('href')||'').toLowerCase();
+      const id=(el.id||'').toLowerCase();
+      const cls=(typeof el.className === 'string' ? el.className : '').toLowerCase();
+
+      const isMyOrders =
+        text === 'my orders' ||
+        text === 'orders' ||
+        text.includes('my orders') ||
+        href.includes('orders.html') ||
+        href.includes('my-orders') ||
+        id.includes('orders') ||
+        cls.includes('orders');
+
+      if(isMyOrders) el.remove();
+    });
+
+    // Buyer-only product controls.
+    document.querySelectorAll('[data-add], .add-btn, .checkout-btn, [id="checkoutBtn"]').forEach(el=>el.remove());
   }
 
-  async function applyShopOwnerMode(){
+  async function checkShopOwner(){
     try{
       const {data:{user}}=await client.auth.getUser();
-      if(!user) return;
+      if(!user) return false;
 
-      const {data:profile}=await client
+      const {data:profile,error}=await client
         .from('profiles')
         .select('role')
         .eq('id',user.id)
-        .single();
+        .maybeSingle();
+
+      if(error){
+        console.error('Could not check account role:', error);
+        return false;
+      }
 
       if(profile?.role === 'shop_owner'){
-        hideBuyerOrderControls(true);
+        removeBuyerControls();
+        return true;
       }
     }catch(err){
-      console.error('Shop owner public view-only mode failed:',err);
+      console.error('Shop owner view-only mode failed:',err);
     }
+    return false;
   }
 
-  // Run once now and again after dynamic UI/auth rendering.
-  applyShopOwnerMode();
-  window.addEventListener('load', applyShopOwnerMode);
-  setTimeout(applyShopOwnerMode, 1000);
-  setTimeout(applyShopOwnerMode, 2500);
+  // The header is rendered immediately, while some account controls may be
+  // rendered by main.js after authentication. Re-run after those changes.
+  checkShopOwner();
+  window.addEventListener('load', checkShopOwner);
+  setTimeout(checkShopOwner, 500);
+  setTimeout(checkShopOwner, 1500);
+  setTimeout(checkShopOwner, 3000);
+
+  const observer=new MutationObserver(()=>{
+    checkShopOwner();
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
 })();
