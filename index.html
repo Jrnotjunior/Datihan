@@ -291,70 +291,16 @@
     .auth-btn{ padding:.55rem .75rem; }
   }
 
-
-/* GLOBAL HOVER EFFECTS */
-.btn, .tabbtn, .header-cta, .auth-btn, .cart-btn, .role-nav-btn,
-.newsletter button, .go, .close, .drawer-close, .auth-close,
-.plate-logo, button {
-  transition: background-color .18s ease, color .18s ease, border-color .18s ease,
-              box-shadow .18s ease, transform .18s ease, opacity .18s ease;
-}
-
-.btn:not(:disabled):hover,
-.header-cta:hover,
-.auth-btn:hover,
-.cart-btn:hover,
-.role-nav-btn:hover,
-.newsletter button:hover,
-#newsBanner button.go:hover,
-.tabbtn:hover,
-.drawer-close:hover,
-.auth-close:hover {
-  transform: translateY(-2px);
-}
-
-.btn:not(:disabled):active,
-.header-cta:active,
-.auth-btn:active,
-.cart-btn:active,
-.role-nav-btn:active,
-.newsletter button:active,
-#newsBanner button.go:active,
-.tabbtn:active {
-  transform: translateY(0);
-}
-
-.plate-logo:hover svg {
-  filter: drop-shadow(0 3px 5px rgba(27,27,26,.14));
-}
-
-.product-card, .event-card, .about-card, .feature-card, .consign-card {
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.product-card:hover, .event-card:hover, .about-card:hover, .feature-card:hover, .consign-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(27,27,26,.10);
-  border-color: var(--accent);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn, .tabbtn, .header-cta, .auth-btn, .cart-btn, .role-nav-btn,
-  .newsletter button, .go, .close, .drawer-close, .auth-close,
-  .plate-logo, button, .product-card, .event-card, .about-card,
-  .feature-card, .consign-card { transition: none !important; }
-}
-
 </style>
 </head>
 <body>
 
-<div id="newsBanner" hidden>
+<div id="newsBanner">
   <div class="inner">
     <span class="pin">●</span>
-    <span class="msg" id="newsBannerMsg"></span>
-    <button class="go" id="newsBannerGo" type="button">See details</button>
-    <button class="close" id="newsBannerClose" aria-label="Dismiss">&times;</button>
+    <span class="msg">Pop-up alert — Datihan at Cafe Ibarra, coming soon</span>
+    <button class="go" data-goto="events">See details</button>
+    <button class="close" aria-label="Dismiss">&times;</button>
   </div>
 </div>
 
@@ -417,13 +363,12 @@
       </div>
     </div>
 
-    <div class="teaser-card" id="homePopupTeaser" style="margin-top:56px;">
+    <div class="teaser-card" style="margin-top:56px;">
       <div>
-        <div class="tag-font" id="homePopupEyebrow">NEXT POP-UP</div>
-        <h3 class="display" id="homePopupTitle">Loading pop-ups…</h3>
-        <p id="homePopupMeta" style="margin:6px 0 0; opacity:.78; font-size:.88rem;"></p>
+        <div class="tag-font">NEXT POP-UP</div>
+        <h3 class="display">Cafe Ibarra</h3>
       </div>
-      <button class="btn btn-outline" id="homePopupButton" data-goto="events">See all pop-ups</button>
+      <button class="btn btn-outline" data-goto="events">See all pop-ups</button>
     </div>
   </div>
 
@@ -460,10 +405,10 @@
       </div>
     </div>
 
-    <div class="event-list" id="popupEventList">
+    <div class="event-list">
       <div class="event-row">
-        <div class="event-info"><h3>Loading pop-ups…</h3></div>
-        <div class="event-status">Please wait</div>
+        <div class="event-info"><h3>Cafe Ibarra</h3></div>
+        <div class="event-status">Upcoming</div>
       </div>
     </div>
 
@@ -561,7 +506,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">How do I buy if there's no shop?<span class="plus">+</span></button>
-          <div class="faq-a"><p>Shop the catalog here, add pieces to your cart, and check out with Cash on Delivery — no online payment needed yet.</p></div>
+          <div class="faq-a"><p>Shop the catalog here and add pieces to your cart. You'll need to sign in or create a buyer account before checkout. Cash on Delivery is available for now.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">How does Cash on Delivery work?<span class="plus">+</span></button>
@@ -821,98 +766,6 @@
     });
   });
 
-  // ---------------- POP-UPS / ALERTS ----------------
-  let ACTIVE_POPUPS = [];
-  function popupTabName(value){
-    const allowed = ['home','shop','events','consign','about'];
-    return allowed.includes(value) ? value : 'events';
-  }
-
-  function popupDateText(value){
-    return value ? new Date(value + 'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}) : '';
-  }
-
-  function popupTimeText(value){
-    if(!value) return '';
-    const parts=String(value).slice(0,5).split(':');
-    const d=new Date(2000,0,1,Number(parts[0]),Number(parts[1]));
-    return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
-  }
-
-  function popupStatus(p){
-    if(!p.event_date) return 'Announcement';
-    const now = new Date();
-    const [y,m,d] = p.event_date.split('-').map(Number);
-    const start = p.start_time ? new Date(y,m-1,d,...String(p.start_time).slice(0,5).split(':').map(Number)) : new Date(y,m-1,d,0,0);
-    const end = p.end_time ? new Date(y,m-1,d,...String(p.end_time).slice(0,5).split(':').map(Number)) : new Date(y,m-1,d,23,59,59,999);
-    if(now < start) return 'Upcoming';
-    if(now <= end) return 'Ongoing';
-    return 'Ended';
-  }
-
-  function renderPopups(){
-    const list = document.getElementById('popupEventList');
-    const homeTitle = document.getElementById('homePopupTitle');
-    const homeMeta = document.getElementById('homePopupMeta');
-    const homeButton = document.getElementById('homePopupButton');
-    const banner = document.getElementById('newsBanner');
-    if(!list) return;
-
-    if(!ACTIVE_POPUPS.length){
-      list.innerHTML = '<div class="event-row"><div class="event-info"><h3>No upcoming pop-ups</h3><p>Check back soon for the next Datihan event.</p></div><div class="event-status">Stay tuned</div></div>';
-      if(homeTitle) homeTitle.textContent = 'No upcoming pop-ups';
-      if(homeMeta) homeMeta.textContent = 'Check back soon for the next Datihan event.';
-      if(homeButton){
-        homeButton.textContent = 'View Pop-Ups';
-        homeButton.onclick = () => activateTab('events');
-      }
-      if(banner){
-        banner.hidden = true;
-        banner.classList.add('hidden');
-      }
-      return;
-    }
-
-    list.innerHTML = ACTIVE_POPUPS.map(p => {
-      const title = escapeHtml(p.title);
-      const message = escapeHtml(p.message);
-      const location = escapeHtml(p.location || '');
-      const date = popupDateText(p.event_date);
-      const time = [popupTimeText(p.start_time), popupTimeText(p.end_time)].filter(Boolean).join(' – ');
-      const status = popupStatus(p);
-      return '<div class="event-row"><div class="event-info"><h3>'+title+'</h3><p>'+message+(location?' · '+location:'')+(date?' · '+date:'')+(time?' · '+time:'')+'</p></div><div class="event-status">'+status+'</div></div>';
-    }).join('');
-
-    const first = ACTIVE_POPUPS[0];
-    const firstLocation = first.location ? String(first.location) : '';
-    const firstDate = popupDateText(first.event_date);
-    const firstTime = [popupTimeText(first.start_time), popupTimeText(first.end_time)].filter(Boolean).join(' – ');
-    const firstMeta = [firstLocation, firstDate, firstTime].filter(Boolean).join(' · ');
-
-    if(homeTitle) homeTitle.textContent = first.title || 'Datihan Pop-Up';
-    if(homeMeta) homeMeta.textContent = firstMeta;
-    if(homeButton){
-      homeButton.textContent = first.button_text || 'See details';
-      homeButton.onclick = () => activateTab(popupTabName(first.button_tab));
-    }
-
-    if(banner){
-      document.getElementById('newsBannerMsg').textContent = first.title + ' — ' + first.message;
-      const go = document.getElementById('newsBannerGo');
-      go.textContent = first.button_text || 'See details';
-      go.onclick = () => activateTab(popupTabName(first.button_tab));
-      document.getElementById('newsBannerClose').onclick = () => banner.classList.add('hidden');
-      banner.hidden = false;
-      banner.classList.remove('hidden');
-    }
-  }
-  async function loadPopups(){
-    const {data,error} = await supabaseClient.from('popups').select('*').eq('is_active',true).order('event_date',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
-    if(error){ console.error('Could not load pop-ups:', error); ACTIVE_POPUPS=[]; renderPopups(); return; }
-    ACTIVE_POPUPS = data || [];
-    renderPopups();
-  }
-
   // ---------------- TABS ----------------
   const tabs = document.querySelectorAll('[data-tab]');
   const panels = document.querySelectorAll('.tabpanel');
@@ -933,6 +786,10 @@
     });
   });
 
+  document.querySelector('#newsBanner .close').addEventListener('click', () => {
+    document.getElementById('newsBanner').classList.add('hidden');
+  });
+  document.querySelector('#newsBanner .go').addEventListener('click', () => activateTab('events'));
 
   document.querySelectorAll('.faq-q').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1017,7 +874,14 @@
 
     const goCheckout = document.getElementById('goCheckout');
     if(goCheckout){
-      goCheckout.addEventListener('click', () => {
+      goCheckout.addEventListener('click', async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if(!user){
+          closeDrawers();
+          pendingCheckout=true;
+          showCheckoutAuthChoice();
+          return;
+        }
         closeDrawers();
         renderCheckoutForm();
         openDrawer(checkoutDrawer);
@@ -1111,6 +975,64 @@
   const authMessage = document.getElementById('authMessage');
 
   let pendingOtpEmail = '';
+  let pendingCheckout = false;
+
+  function goToLoginForCheckout(){
+    localStorage.setItem('datihan_return_to_checkout','true');
+    location.href = 'login.html';
+  }
+
+  function openCheckoutAfterLogin(){
+    const shouldReturn = localStorage.getItem('datihan_return_to_checkout') === 'true';
+    if(!shouldReturn) return;
+    localStorage.removeItem('datihan_return_to_checkout');
+    if(Object.keys(cart).length){
+      closeAuth();
+      renderCheckoutForm();
+      openDrawer(checkoutDrawer);
+    }
+  }
+
+  function showCheckoutAuthChoice(){
+    authTitle.textContent = 'Login required to checkout';
+    authBody.innerHTML = `
+      <p class="auth-copy">You can browse Datihan without an account. To place an order, choose an option below.</p>
+      <button class="btn btn-primary auth-submit" type="button" id="existingBuyerBtn">I already have an account</button>
+      <button class="btn btn-outline auth-submit" type="button" id="newBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
+      <p class="auth-message">Existing buyers will sign in through the Datihan login page. New buyers can create an account with their email.</p>`;
+    document.getElementById('existingBuyerBtn').addEventListener('click', goToLoginForCheckout);
+    document.getElementById('newBuyerBtn').addEventListener('click', showSignupStep);
+    openAuth();
+  }
+
+  function showSignupStep(){
+    authTitle.textContent = 'Create your buyer account';
+    authBody.innerHTML = `
+      <p class="auth-copy">Enter your email and we'll send you a 6-digit code to create your buyer account.</p>
+      <form id="signupEmailForm">
+        <div class="auth-field">
+          <label for="signupEmail">Email</label>
+          <input id="signupEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+        <button class="btn btn-primary auth-submit" type="submit" id="signupSendBtn">Send Sign-Up Code</button>
+        <p class="auth-message" id="signupMessage" aria-live="polite"></p>
+      </form>
+      <div class="auth-secondary"><button class="auth-link" type="button" id="backAuthChoiceBtn">Back</button></div>`;
+    document.getElementById('backAuthChoiceBtn').addEventListener('click', showCheckoutAuthChoice);
+    document.getElementById('signupEmailForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById('signupEmail').value.trim().toLowerCase();
+      const btn=document.getElementById('signupSendBtn');
+      const message=document.getElementById('signupMessage');
+      if(!email) return;
+      btn.disabled=true; message.textContent='Sending your sign-up code…'; message.className='auth-message';
+      const {error}=await supabaseClient.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+      btn.disabled=false;
+      if(error){message.textContent=error.message||'Could not send the sign-up code.';message.className='auth-message error';return;}
+      pendingOtpEmail=email;
+      showOtpStep();
+    });
+  }
 
   function setAuthMessage(message, type=''){
     authMessage.textContent = message;
@@ -1176,7 +1098,7 @@
   function showOtpStep(){
     authTitle.textContent = 'Check your email';
     authBody.innerHTML = `
-      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to finish signing in.</p>
+      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to ${pendingCheckout ? 'finish creating your buyer account' : 'finish signing in'}.</p>
       <form id="authOtpForm">
         <div class="auth-field">
           <label for="authOtp">6-digit OTP</label>
@@ -1226,6 +1148,11 @@
 
     await refreshAuthUI();
     closeAuth();
+    if(pendingCheckout){
+      pendingCheckout=false;
+      renderCheckoutForm();
+      openDrawer(checkoutDrawer);
+    }
   }
 
   async function resendOtp(){
@@ -1339,8 +1266,8 @@
   // ---------------- INIT ----------------
   refreshAuthUI();
   renderCartBadge();
+  openCheckoutAfterLogin();
   loadProducts();
-  loadPopups();
 </script>
 
 </body>
