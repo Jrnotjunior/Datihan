@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Datihan — My Orders</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f0ec;color:#171717;font-family:"Courier New",monospace}.wrap{max-width:1000px;margin:auto;padding:28px 18px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #aaa;padding-bottom:18px}.eyebrow{font-size:12px;letter-spacing:1px;color:#555}.top h1{margin:5px 0 0;font-family:Impact,Arial,sans-serif;font-size:44px}.btn{border:1px solid #333;background:#171717;color:#fff;padding:10px 14px;font:700 13px "Courier New",monospace;cursor:pointer}.btn.light{background:#f8f8f5;color:#171717}.message{margin:18px 0;padding:12px;border:1px solid #b7d4c3;background:#f5faf6;color:#174b32;display:none}.message.show{display:block}.message.error{border-color:#e0b5b0;background:#fff7f6;color:#9b241a}.order{background:#f8f8f5;border:1px solid #c9c9c3;margin:14px 0;padding:18px}.order-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;border-bottom:1px solid #ddd;padding-bottom:12px}.order-id{font-weight:700}.date{font-size:12px;color:#666}.status{display:inline-block;padding:5px 9px;border:1px solid #aaa;font-size:11px;font-weight:700;text-transform:uppercase}.status.pending{background:#fff8e8;border-color:#d9bd77;color:#8a5a00}.status.confirmed{background:#f0faf3;border-color:#a8d4b7;color:#067647}.status.completed{background:#eef4ff;border-color:#a8bfdc;color:#24507a}.status.cancelled{background:#fff2f1;border-color:#e0aaa5;color:#b42318}.item{display:flex;gap:14px;padding-top:15px;align-items:center}.item img{width:72px;height:88px;object-fit:cover;border:1px solid #bbb;background:#eee}.item h2{margin:0 0 6px;font-size:18px}.meta{font-size:12px;color:#555}.price{font-weight:700;margin-top:8px}.empty{text-align:center;padding:50px 20px;color:#666;border:1px solid #c9c9c3;background:#f8f8f5}@media(max-width:650px){.top{align-items:flex-start;flex-direction:column}.top h1{font-size:36px}.order-head{flex-direction:column}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div><div class="eyebrow">DATIHAN THRIFT SHOP / BUYER</div><h1>MY ORDERS</h1></div><div><button class="btn light" id="storeBtn">Back to Store</button> <button class="btn" id="signOutBtn">Sign Out</button></div></header>
+<div id="message" class="message"></div><section id="orders"></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const URL='https://kymtqzyatofclfaeegfw.supabase.co';const KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';const db=window.supabase.createClient(URL,KEY);const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function msg(t,error=false){$('message').textContent=t;$('message').className='message show'+(error?' error':'');}
+function statusClass(s){return ['pending','confirmed','completed','cancelled'].includes(String(s).toLowerCase())?String(s).toLowerCase():'pending';}
+async function load(){const {data:{user}}=await db.auth.getUser();if(!user){location.href='login.html';return;}const {data,error}=await db.from('orders').select('id,buyer_id,inventory_id,status,created_at,inventory:inventory_id(id,item_code,name,price,image_url,image_urls)').eq('buyer_id',user.id).order('created_at',{ascending:false});if(error){console.error(error);msg('Could not load your orders: '+error.message,true);return;}render(data||[]);}
+function render(rows){if(!rows.length){$('orders').innerHTML='<div class="empty">You have no orders yet.</div>';return;}$('orders').innerHTML=rows.map(o=>{const p=o.inventory||{};const image=p.image_url||(Array.isArray(p.image_urls)?p.image_urls[0]:'');return `<article class="order"><div class="order-head"><div><div class="order-id">ORDER #${esc(o.id)}</div><div class="date">${new Date(o.created_at).toLocaleString()}</div></div><span class="status ${statusClass(o.status)}">${esc(o.status)}</span></div><div class="item">${image?`<img src="${esc(image)}" alt="">`:''}<div><h2>${esc(p.name||'Item')}</h2><div class="meta">Code: ${esc(p.item_code||p.id||o.inventory_id)}</div><div class="price">₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></article>`}).join('');}
+window.addEventListener('datihan:realtime',e=>{if(e.detail?.table==='orders'||e.detail?.table==='inventory')load();});
+$('storeBtn').onclick=()=>location.href='index.html';$('signOutBtn').onclick=async()=>{await db.auth.signOut();location.href='login.html'};load();
+const ch=db.channel('buyer-orders-page').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load()).subscribe();
+</script><script src="js/realtime-sync.js"></script>
+</body></html>
