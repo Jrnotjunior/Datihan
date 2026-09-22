@@ -1,24 +1,55 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Datihan Shop Owner — Orders</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f1f0ec;color:#171717;font-family:"Courier New",monospace}.wrap{max-width:1200px;margin:auto;padding:28px 18px 60px}.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:1px solid #aaa;padding-bottom:18px}.eyebrow{font-size:12px;letter-spacing:1px;color:#555}.top h1{margin:5px 0 0;font:900 52px/1 Impact,Arial,sans-serif}.actions{display:flex;gap:8px;flex-wrap:wrap}button{border:1px solid #333;background:#f8f8f5;color:#171717;padding:10px 14px;font:700 13px "Courier New",monospace;cursor:pointer}button.primary{background:#171717;color:#fff}button.danger{color:#b42318;border-color:#d59b96}.message{display:none;margin:18px 0;padding:12px;border:1px solid #b7d4c3;background:#f5faf6;color:#174b32}.message.show{display:block}.message.error{border-color:#e0b5b0;background:#fff7f6;color:#9b241a}.toolbar{display:flex;gap:10px;align-items:center;margin:20px 0 10px}.toolbar input{flex:1;padding:12px;border:1px solid #bbb;background:#fff;font:14px "Courier New",monospace}.count{font-size:12px;letter-spacing:1px}.table{background:#f8f8f5;border:1px solid #c9c9c3;overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid #ddd;vertical-align:middle}th{background:#f3f3ef;font-size:12px;text-transform:uppercase;letter-spacing:1px}.thumb{width:50px;height:60px;object-fit:cover;border:1px solid #bbb;background:#eee}.item{display:flex;align-items:center;gap:10px}.status{display:inline-block;padding:5px 8px;border:1px solid #aaa;font-size:11px;font-weight:700;text-transform:uppercase}.status.pending{background:#fff8e8;border-color:#d9bd77;color:#8a5a00}.status.confirmed{background:#f0faf3;border-color:#a8d4b7;color:#067647}.status.completed{background:#eef4ff;border-color:#a8bfdc;color:#24507a}.status.cancelled{background:#fff2f1;border-color:#e0aaa5;color:#b42318}.empty{text-align:center;padding:45px;color:#666}select{padding:8px 10px;border:1px solid #bbb;background:#fff;font:13px "Courier New",monospace}@media(max-width:650px){.top{align-items:flex-start;flex-direction:column}.top h1{font-size:40px}}
-</style></head><body><main class="wrap"><header class="top"><div><div class="eyebrow">DATIHAN THRIFT SHOP / SHOP OWNER</div><h1>ORDERS</h1></div><div class="actions"><button id="inventoryBtn">Inventory</button><button id="refreshBtn" class="primary">Refresh</button><button id="signOutBtn" class="danger">Sign Out</button></div></header><div id="message" class="message"></div><div class="toolbar"><input id="search" placeholder="Search order, buyer or item..."><span id="count" class="count">0 ORDERS</span></div><div class="table"><table><thead><tr><th>Order</th><th>Item</th><th>Buyer</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="body"></tbody></table></div></main>
+</style></head><body><main class="wrap"><header class="top"><div><div class="eyebrow">DATIHAN THRIFT SHOP / SHOP OWNER</div><h1>ORDERS</h1></div><div class="actions"><button id="inventoryBtn" type="button">Inventory</button><button id="refreshBtn" class="primary" type="button">Refresh</button><button id="signOutBtn" class="danger" type="button">Sign Out</button></div></header><div id="message" class="message"></div><div class="toolbar"><input id="search" placeholder="Search order, buyer or item..."><span id="count" class="count">0 ORDERS</span></div><div class="table"><table><thead><tr><th>Order</th><th>Item</th><th>Buyer</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="body"><tr><td colspan="6" class="empty">Loading orders...</td></tr></tbody></table></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const URL='https://kymtqzyatofclfaeegfw.supabase.co';const KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';const db=window.supabase.createClient(URL,KEY);let rows=[];let inventoryMap={};const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));}
 function msg(t,e=false){$('message').textContent=t;$('message').className='message show'+(e?' error':'');}
 function clearMsg(){$('message').className='message';$('message').textContent='';}
-async function checkStaff(){const {data:{user},error:ue}=await db.auth.getUser();if(ue||!user){location.href='login.html';return null;}const {data:profile,error:pe}=await db.from('profiles').select('role').eq('id',user.id).single();if(pe){msg('Could not verify account role: '+pe.message,true);return null;}if(!['shop_owner','admin'].includes(profile?.role)){location.href='index.html';return null;}return user;}
-async function load(){clearMsg();const user=await checkStaff();if(!user)return;$('body').innerHTML='<tr><td colspan="6" class="empty">Loading orders...</td></tr>';
- // Load orders directly. The orders table already has a staff SELECT RLS policy, so this avoids relying on the separate RPC function.
-const { data: orders, error } = await db.rpc('get_shop_owner_orders');
- if(error){msg('Could not load orders: '+error.message,true);rows=[];render();return;}
- rows=orders||[];inventoryMap={};
- const ids=[...new Set(rows.map(o=>o.inventory_id).filter(v=>v!==null&&v!==undefined))];
- if(ids.length){const {data:items,error:ie}=await db.from('inventory').select('id,item_code,name,price,image_url').in('id',ids);if(ie){msg('Orders loaded, but item details could not be loaded: '+ie.message,true);}else{(items||[]).forEach(i=>inventoryMap[String(i.id)]=i);}}
- render();
+async function checkStaff(){
+  const {data:{user},error:ue}=await db.auth.getUser();
+  if(ue){msg('Authentication error: '+ue.message,true);return null;}
+  if(!user){msg('No active login session. Please sign in again.',true);setTimeout(()=>location.href='login.html',1200);return null;}
+  const {data:profile,error:pe}=await db.from('profiles').select('role').eq('id',user.id).single();
+  if(pe){msg('Could not verify account role: '+pe.message,true);return null;}
+  if(!['shop_owner','admin'].includes(profile?.role)){msg('This account is not a shop owner/admin account.',true);setTimeout(()=>location.href='index.html',1200);return null;}
+  return user;
 }
-function render(){const q=$('search').value.trim().toLowerCase();const list=rows.filter(o=>{const p=inventoryMap[String(o.inventory_id)]||{};return !q||[o.id,o.buyer_id,o.status,o.inventory_id,p.name,p.item_code].some(v=>String(v??'').toLowerCase().includes(q));});$('count').textContent=`${list.length} ORDER${list.length===1?'':'S'}`;if(!list.length){$('body').innerHTML='<tr><td colspan="6" class="empty">No orders found.</td></tr>';return;}$('body').innerHTML=list.map(o=>{const p=inventoryMap[String(o.inventory_id)]||{};return `<tr><td><strong>#${esc(o.id)}</strong></td><td><div class="item">${p.image_url?`<img class="thumb" src="${esc(p.image_url)}" alt="">`:''}<div><strong>${esc(p.name||'Item')}</strong><div>${esc(p.item_code||o.inventory_id)} · ₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></td><td>${esc(o.buyer_id)}</td><td>${new Date(o.created_at).toLocaleString()}</td><td><span class="status ${esc(o.status)}">${esc(o.status)}</span></td><td><select data-status="${esc(o.id)}"><option value="pending" ${o.status==='pending'?'selected':''}>Pending</option><option value="confirmed" ${o.status==='confirmed'?'selected':''}>Confirmed</option><option value="completed" ${o.status==='completed'?'selected':''}>Completed</option><option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option></select></td></tr>`}).join('');}
+async function load(){
+  clearMsg();
+  const user=await checkStaff();
+  if(!user)return;
+  $('body').innerHTML='<tr><td colspan="6" class="empty">Loading orders...</td></tr>';
+
+  // IMPORTANT: query the orders table directly. The previous version called
+  // get_shop_owner_orders(), but the database function created for this project
+  // is different. Direct SELECT is protected by the existing staff RLS policy.
+  const {data:orders,error}=await db.from('orders').select('*').order('created_at',{ascending:false});
+  if(error){
+    msg('Could not load orders: '+error.message,true);
+    rows=[];render();return;
+  }
+
+  rows=orders||[];inventoryMap={};
+  const ids=[...new Set(rows.map(o=>o.inventory_id).filter(v=>v!==null&&v!==undefined))];
+  if(ids.length){
+    const {data:items,error:ie}=await db.from('inventory').select('id,item_code,name,price,image_url').in('id',ids);
+    if(ie){msg('Orders loaded, but item details could not be loaded: '+ie.message,true);}
+    else{(items||[]).forEach(i=>inventoryMap[String(i.id)]=i);}
+  }
+  render();
+}
+function render(){
+  const q=$('search').value.trim().toLowerCase();
+  const list=rows.filter(o=>{const p=inventoryMap[String(o.inventory_id)]||{};return !q||[o.id,o.buyer_id,o.status,o.inventory_id,p.name,p.item_code].some(v=>String(v??'').toLowerCase().includes(q));});
+  $('count').textContent=`${list.length} ORDER${list.length===1?'':'S'}`;
+  if(!list.length){$('body').innerHTML='<tr><td colspan="6" class="empty">No orders found.</td></tr>';return;}
+  $('body').innerHTML=list.map(o=>{const p=inventoryMap[String(o.inventory_id)]||{};return `<tr><td><strong>#${esc(o.id)}</strong></td><td><div class="item">${p.image_url?`<img class="thumb" src="${esc(p.image_url)}" alt="">`:''}<div><strong>${esc(p.name||'Item')}</strong><div>${esc(p.item_code||o.inventory_id)} · ₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></td><td>${esc(o.buyer_id)}</td><td>${new Date(o.created_at).toLocaleString()}</td><td><span class="status ${esc(o.status)}">${esc(o.status)}</span></td><td><select data-status="${esc(o.id)}"><option value="pending" ${o.status==='pending'?'selected':''}>Pending</option><option value="confirmed" ${o.status==='confirmed'?'selected':''}>Confirmed</option><option value="completed" ${o.status==='completed'?'selected':''}>Completed</option><option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option></select></td></tr>`}).join('');
+}
 $('body').addEventListener('change',async e=>{const s=e.target.closest('[data-status]');if(!s)return;const id=s.dataset.status;const newStatus=s.value;s.disabled=true;const {error}=await db.from('orders').update({status:newStatus}).eq('id',id);s.disabled=false;if(error){msg('Could not update order: '+error.message,true);await load();return;}const r=rows.find(o=>String(o.id)===String(id));if(r)r.status=newStatus;render();msg('Order status updated.');setTimeout(clearMsg,2500);});
-$('search').oninput=render;$('refreshBtn').onclick=load;$('inventoryBtn').onclick=()=>location.href='shop-owner.html';$('signOutBtn').onclick=async()=>{await db.auth.signOut();location.href='login.html'};
-window.addEventListener('datihan:realtime',e=>{if(e.detail?.table==='orders'||e.detail?.table==='inventory')load();});db.channel('shop-orders-page').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load()).subscribe();load();
+$('search').oninput=render;$('refreshBtn').onclick=load;$('inventoryBtn').onclick=()=>location.href='shop-owner.html';$('signOutBtn').onclick=async()=>{const {error}=await db.auth.signOut();if(error){msg('Sign out failed: '+error.message,true);return;}location.href='login.html'};
+window.addEventListener('datihan:realtime',e=>{if(e.detail?.table==='orders'||e.detail?.table==='inventory')load();});
+db.channel('shop-orders-page').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load()).subscribe();
+load();
 </script><script src="js/realtime-sync.js"></script></body></html>
