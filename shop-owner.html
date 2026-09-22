@@ -64,6 +64,69 @@ tbody tr:last-child td{border-bottom:0}
 
 .popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:20px 0 12px}.popup-list{display:block}.popup-table-wrap{background:#f8f8f5;border:1px solid var(--line);overflow:auto}.popup-table{width:100%;border-collapse:collapse;min-width:1050px}.popup-table th,.popup-table td{text-align:left;padding:14px 12px;border-bottom:1px solid #deded9;vertical-align:middle}.popup-table th{background:#f3f3ef;font-size:12px;letter-spacing:1px;text-transform:uppercase}.popup-table tbody tr:last-child td{border-bottom:0}.popup-title-cell{min-width:210px}.popup-title-cell strong{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:22px;line-height:1.05;margin-bottom:5px}.popup-title-cell span{font-size:12px;color:#555}.popup-location{min-width:150px}.popup-time{white-space:nowrap}.popup-status{display:inline-block;padding:5px 9px;border:1px solid;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-status.upcoming{background:#f0faf3;color:#067647;border-color:#a8d4b7}.popup-status.live{background:#fff8e8;color:#8a5a00;border-color:#d9bd77}.popup-status.completed{background:#eee;color:#666;border-color:#bbb}.popup-status.hidden{background:#eee;color:#777;border-color:#aaa}.popup-visibility{display:inline-block;padding:5px 9px;border:1px solid #a8d4b7;background:#f0faf3;color:#067647;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-visibility.hidden{border-color:#aaa;background:#eee;color:#777}.popup-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.popup-actions button{padding:8px 11px;font-size:12px}.popup-form textarea{min-height:100px}
 .popup-empty{padding:36px;text-align:center;color:#666;border:1px solid var(--line);background:#f8f8f5}
+
+/* Pop-Ups / Alerts layout fix */
+.popup-page,
+.popups-page,
+#popupsPage,
+.popups-section {
+  width: 100%;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.popup-page .popup-summary,
+.popups-page .popup-summary,
+#popupsPage .popup-summary,
+.popups-section .popup-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.popup-page .popup-summary > *,
+.popups-page .popup-summary > *,
+#popupsPage .popup-summary > *,
+.popups-section .popup-summary > * {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.popup-page .popup-toolbar,
+.popups-page .popup-toolbar,
+#popupsPage .popup-toolbar,
+.popups-section .popup-toolbar,
+.popup-page .popup-table-wrap,
+.popups-page .popup-table-wrap,
+#popupsPage .popup-table-wrap,
+.popups-section .popup-table-wrap {
+  width: 100%;
+  max-width: 1100px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .popup-page .popup-summary,
+  .popups-page .popup-summary,
+  #popupsPage .popup-summary,
+  .popups-section .popup-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .popup-page .popup-summary,
+  .popups-page .popup-summary,
+  #popupsPage .popup-summary,
+  .popups-section .popup-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 </head>
 <body>
