@@ -220,5 +220,16 @@ $('modalTitle').addEventListener('pointerup',()=>dragging=false);$('modalTitle')
 (async()=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.onload=async()=>{supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const {data:{user}}=await supabaseClient.auth.getUser();if(!user){location.href='login.html';return}const {data:profile,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();if(error){document.body.insertAdjacentHTML('afterbegin','<div style="position:fixed;inset:0;z-index:99999;background:#f4f4f0;color:#171717;display:grid;place-items:center;font-family:Courier New,monospace;padding:24px;text-align:center"><div><h2 style="font-family:Impact,Arial,sans-serif;font-size:32px;margin:0 0 12px">SHOP OWNER PAGE ERROR</h2><p>Unable to load your account role. Please refresh or sign in again.</p></div></div>');console.error('Profile lookup failed:',error);return}if(!['shop_owner','admin'].includes(profile?.role)){location.href='index.html';return}if(profile.role==='admin')$('adminDashboardBtn').style.display='inline-block';await loadInventory()};document.head.appendChild(s)})();
 </script>
 <script src="js/realtime-sync.js"></script>
+<script id="shop-owner-hide-orders">
+(function(){
+  function hideOrders(){
+    document.querySelectorAll('button,a').forEach(function(el){
+      if((el.textContent||'').trim().toLowerCase()==='orders') el.remove();
+    });
+  }
+  hideOrders();
+  new MutationObserver(hideOrders).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>
