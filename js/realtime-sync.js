@@ -105,3 +105,41 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initPhotoValidation,{once:true});else initPhotoValidation();
 })();
+
+// ---------------- PHASE 10 MISSING PHOTO MESSAGE ----------------
+(function(){
+  function init(){
+    const form=document.getElementById('itemForm');
+    const preview=document.getElementById('imagePreview');
+    const input=document.getElementById('imageFiles');
+    if(!form||!preview||!input)return;
+    function getBox(){
+      let box=document.getElementById('photoValidationMessage');
+      if(!box){
+        box=document.createElement('div'); box.id='photoValidationMessage';
+        box.style.cssText='display:none;margin-top:8px;padding:10px 12px;border:1px solid #e0b5b0;background:#fff7f6;color:#9b241a;font-size:12px;font-weight:700;line-height:1.4;';
+        preview.parentNode.insertBefore(box,preview);
+      }
+      return box;
+    }
+    function show(msg){const box=getBox();box.textContent='⚠️ '+msg;box.style.display='block';}
+    function clear(){const box=document.getElementById('photoValidationMessage');if(box)box.style.display='none';}
+    form.addEventListener('submit',function(e){
+      let existing=[]; try{existing=JSON.parse(preview.dataset.existing||'[]');}catch(err){}
+      const total=existing.length + Number(input.dataset.currentNew||0) + Array.from(input.files||[]).length;
+      if(total<1){
+        e.preventDefault(); e.stopImmediatePropagation();
+        show('At least 1 photo is required. Please add a photo before saving.');
+        return;
+      }
+      if(total>8){
+        e.preventDefault(); e.stopImmediatePropagation();
+        show('Maximum 8 photos allowed. Remove a photo before saving.');
+        return;
+      }
+      clear();
+    },true);
+    preview.addEventListener('click',()=>setTimeout(()=>{let existing=[];try{existing=JSON.parse(preview.dataset.existing||'[]')}catch(e){} if(existing.length>0||input.files?.length)clear();},0));
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
