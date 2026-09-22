@@ -64,67 +64,66 @@ tbody tr:last-child td{border-bottom:0}
 
 .popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:20px 0 12px}.popup-list{display:block}.popup-table-wrap{background:#f8f8f5;border:1px solid var(--line);overflow:auto}.popup-table{width:100%;border-collapse:collapse;min-width:1050px}.popup-table th,.popup-table td{text-align:left;padding:14px 12px;border-bottom:1px solid #deded9;vertical-align:middle}.popup-table th{background:#f3f3ef;font-size:12px;letter-spacing:1px;text-transform:uppercase}.popup-table tbody tr:last-child td{border-bottom:0}.popup-title-cell{min-width:210px}.popup-title-cell strong{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:22px;line-height:1.05;margin-bottom:5px}.popup-title-cell span{font-size:12px;color:#555}.popup-location{min-width:150px}.popup-time{white-space:nowrap}.popup-status{display:inline-block;padding:5px 9px;border:1px solid;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-status.upcoming{background:#f0faf3;color:#067647;border-color:#a8d4b7}.popup-status.live{background:#fff8e8;color:#8a5a00;border-color:#d9bd77}.popup-status.completed{background:#eee;color:#666;border-color:#bbb}.popup-status.hidden{background:#eee;color:#777;border-color:#aaa}.popup-visibility{display:inline-block;padding:5px 9px;border:1px solid #a8d4b7;background:#f0faf3;color:#067647;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-visibility.hidden{border-color:#aaa;background:#eee;color:#777}.popup-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.popup-actions button{padding:8px 11px;font-size:12px}.popup-form textarea{min-height:100px}
 .popup-empty{padding:36px;text-align:center;color:#666;border:1px solid var(--line);background:#f8f8f5}
-
-/* Pop-Ups / Alerts layout fix */
-.popup-page,
-.popups-page,
-#popupsPage,
-.popups-section {
-  width: 100%;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
-  box-sizing: border-box;
+/* Hover indicators */
+button:not(:disabled) {
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
 }
 
-.popup-page .popup-summary,
-.popups-page .popup-summary,
-#popupsPage .popup-summary,
-.popups-section .popup-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  width: 100%;
-  box-sizing: border-box;
+button:not(:disabled):hover {
+  background: #e7e5df;
+  border-color: #171717;
+  color: #171717;
 }
 
-.popup-page .popup-summary > *,
-.popups-page .popup-summary > *,
-#popupsPage .popup-summary > *,
-.popups-section .popup-summary > * {
-  min-width: 0;
-  box-sizing: border-box;
+button.primary:not(:disabled):hover {
+  background: #333333;
+  border-color: #333333;
+  color: #ffffff;
 }
 
-.popup-page .popup-toolbar,
-.popups-page .popup-toolbar,
-#popupsPage .popup-toolbar,
-.popups-section .popup-toolbar,
-.popup-page .popup-table-wrap,
-.popups-page .popup-table-wrap,
-#popupsPage .popup-table-wrap,
-.popups-section .popup-table-wrap {
-  width: 100%;
-  max-width: 1100px;
-  box-sizing: border-box;
+button.secondary:not(:disabled):hover {
+  background: #e2e0da;
 }
 
-@media (max-width: 900px) {
-  .popup-page .popup-summary,
-  .popups-page .popup-summary,
-  #popupsPage .popup-summary,
-  .popups-section .popup-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+button.danger:not(:disabled):hover {
+  background: #fff0ee;
+  border-color: #b42318;
+  color: #b42318;
 }
 
-@media (max-width: 560px) {
-  .popup-page .popup-summary,
-  .popups-page .popup-summary,
-  #popupsPage .popup-summary,
-  .popups-section .popup-summary {
-    grid-template-columns: 1fr;
-  }
+button.success:not(:disabled):hover {
+  background: #075f3b;
+  border-color: #075f3b;
+  color: #ffffff;
+}
+
+button.signout:not(:disabled):hover {
+  background: #8f1c14;
+  border-color: #8f1c14;
+  color: #ffffff;
+}
+
+.admin-nav button:not(:disabled):hover {
+  background: #e7e5df;
+  color: #171717;
+}
+
+.admin-nav button.active:not(:disabled):hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+tbody tr {
+  transition: background-color .15s ease;
+}
+
+tbody tr:hover {
+  background: #eeece6;
+}
+
+.actions button:not(:disabled):hover,
+.popup-actions button:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 
 </style>
@@ -170,7 +169,6 @@ tbody tr:last-child td{border-bottom:0}
 <thead><tr><th>Item</th><th>Code</th><th>Category</th><th>Size</th><th>Condition</th><th>Price</th><th>Status</th><th>Consignor</th><th>Actions</th></tr></thead>
 <tbody id="inventoryBody"></tbody>
 </table>
-</div>
 </div>
 </section>
 
@@ -460,7 +458,6 @@ function showPanel(name){
   if(!inv) loadPopups();
 }
 function popupMessage(text,error=false){popupEls.msg.textContent=text;popupEls.msg.className='message show'+(error?' error':'');}
-function escapePopup(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
 function popupStatus(item){
   if(!item.is_active)return 'hidden';
   if(!item.event_date)return 'upcoming';
