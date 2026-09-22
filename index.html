@@ -295,12 +295,12 @@
 </head>
 <body>
 
-<div id="newsBanner">
+<div id="newsBanner" hidden>
   <div class="inner">
     <span class="pin">●</span>
-    <span class="msg">Pop-up alert — Datihan at Cafe Ibarra, coming soon</span>
-    <button class="go" data-goto="events">See details</button>
-    <button class="close" aria-label="Dismiss">&times;</button>
+    <span class="msg" id="newsBannerMsg"></span>
+    <button class="go" id="newsBannerGo" type="button">See details</button>
+    <button class="close" id="newsBannerClose" aria-label="Dismiss">&times;</button>
   </div>
 </div>
 
@@ -363,10 +363,11 @@
       </div>
     </div>
 
-    <div class="teaser-card" style="margin-top:56px;">
+    <div class="teaser-card" id="nextPopupTeaser" style="margin-top:56px;">
       <div>
         <div class="tag-font">NEXT POP-UP</div>
-        <h3 class="display">Cafe Ibarra</h3>
+        <h3 class="display" id="nextPopupTitle">No upcoming pop-ups</h3>
+        <p id="nextPopupMeta" style="margin:6px 0 0;color:var(--ink-soft);"></p>
       </div>
       <button class="btn btn-outline" data-goto="events">See all pop-ups</button>
     </div>
@@ -405,10 +406,10 @@
       </div>
     </div>
 
-    <div class="event-list">
+    <div class="event-list" id="eventList">
       <div class="event-row">
-        <div class="event-info"><h3>Cafe Ibarra</h3></div>
-        <div class="event-status">Upcoming</div>
+        <div class="event-info"><h3>Loading pop-ups…</h3></div>
+        <div class="event-status">Please wait</div>
       </div>
     </div>
 
@@ -506,7 +507,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">How do I buy if there's no shop?<span class="plus">+</span></button>
-          <div class="faq-a"><p>Shop the catalog here, add pieces to your cart, and check out with Cash on Delivery — no online payment needed yet.</p></div>
+          <div class="faq-a"><p>Shop the catalog here and add pieces to your cart. You'll need to sign in or create a buyer account before checkout. Cash on Delivery is available for now.</p></div>
         </div>
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">How does Cash on Delivery work?<span class="plus">+</span></button>
@@ -656,6 +657,100 @@
     renderShopGrid();
   }
 
+  // ---------------- POP-UPS (SUPABASE) ----------------
+  // Pop-ups shown to buyers come only from the Shop Owner's `popups` table.
+  // No event names, locations, dates, or messages are hardcoded in the buyer page.
+  let ACTIVE_POPUPS = [];
+
+  function formatPopupDate(value){
+    if(!value) return '';
+    const d = new Date(value + 'T00:00:00');
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'});
+  }
+
+  function formatPopupTime(value){
+    if(!value) return '';
+    const parts = String(value).slice(0,5).split(':').map(Number);
+    if(parts.length !== 2 || parts.some(Number.isNaN)) return '';
+    const d = new Date(2000,0,1,parts[0],parts[1]);
+    return d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+  }
+
+  function popupSchedule(p){
+    const date = formatPopupDate(p.event_date);
+    const start = formatPopupTime(p.start_time);
+    const end = formatPopupTime(p.end_time);
+    const time = start && end ? start + ' – ' + end : (start || end);
+    return [date,time].filter(Boolean).join(' · ');
+  }
+
+  function popupStatus(p){
+    if(!p.event_date) return 'Active';
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const date = new Date(p.event_date + 'T00:00:00');
+    date.setHours(0,0,0,0);
+    return date.getTime() >= today.getTime() ? 'Upcoming' : 'Past';
+  }
+
+  function renderBuyerPopups(){
+    const banner = document.getElementById('newsBanner');
+    const bannerMsg = document.getElementById('newsBannerMsg');
+    const teaserTitle = document.getElementById('nextPopupTitle');
+    const teaserMeta = document.getElementById('nextPopupMeta');
+    const eventList = document.getElementById('eventList');
+
+    // Only visible/active pop-ups are customer-facing.
+    const visible = ACTIVE_POPUPS.filter(p => p.is_active !== false);
+
+    if(visible.length){
+      const first = visible[0];
+      const schedule = popupSchedule(first);
+      const location = first.location ? ' · ' + escapeHtml(first.location) : '';
+      bannerMsg.textContent = first.title || 'New Datihan pop-up';
+      banner.hidden = false;
+      banner.classList.remove('hidden');
+
+      teaserTitle.textContent = first.title || 'Upcoming pop-up';
+      teaserMeta.innerHTML = escapeHtml(schedule) + (location ? location : '');
+
+      eventList.innerHTML = visible.map(p => {
+        const title = escapeHtml(p.title || 'Untitled pop-up');
+        const message = escapeHtml(p.message || '');
+        const location = escapeHtml(p.location || '');
+        const schedule = escapeHtml(popupSchedule(p));
+        const meta = [location,schedule].filter(Boolean).join(' · ');
+        const status = escapeHtml(popupStatus(p));
+        return `<article class="event-row"><div class="event-info"><h3>${title}</h3>${message ? `<p>${message}</p>` : ''}${meta ? `<div class="tag-font" style="margin-top:6px;color:var(--ink-soft);">${meta}</div>` : ''}</div><div class="event-status">${status}</div></article>`;
+      }).join('');
+    }else{
+      banner.hidden = true;
+      banner.classList.add('hidden');
+      teaserTitle.textContent = 'No upcoming pop-ups';
+      teaserMeta.textContent = 'Check back for the next Datihan event.';
+      eventList.innerHTML = '<div class="event-row"><div class="event-info"><h3>No upcoming pop-ups</h3><p>There are no active pop-up announcements right now.</p></div></div>';
+    }
+  }
+
+  async function loadBuyerPopups(){
+    const { data, error } = await supabaseClient
+      .from('popups')
+      .select('*')
+      .eq('is_active', true)
+      .order('event_date', { ascending:true, nullsFirst:false })
+      .order('created_at', { ascending:false });
+
+    if(error){
+      console.error('Could not load pop-ups:', error);
+      ACTIVE_POPUPS = [];
+      renderBuyerPopups();
+      return;
+    }
+
+    ACTIVE_POPUPS = data || [];
+    renderBuyerPopups();
+  }
+
   const ICONS = {
     shoes: '<path d="M6 34h34c3 0 6-2 6-6-4 0-7-1-10-4l-8-8-6 2-8-2-8 4v14z"/>',
     pants: '<path d="M14 6h20l2 10-3 26h-7l-2-20-2 20h-7L12 16z"/>',
@@ -688,7 +783,7 @@
       return sum + (p ? p.price*qty : 0);
     }, 0);
   }
-  function handleAddToCart(id){
+  function addToCart(id){
     const p = findProduct(id);
     if(!p || p.soldOut) return;
     cart[id] = (cart[id]||0) + 1;
@@ -750,7 +845,7 @@
 
     shopGrid.querySelectorAll('[data-add]').forEach(btn => {
       btn.addEventListener('click', () => {
-        handleAddToCart(btn.dataset.add);
+        addToCart(btn.dataset.add);
         renderShopGrid();
       });
     });
@@ -786,10 +881,10 @@
     });
   });
 
-  document.querySelector('#newsBanner .close').addEventListener('click', () => {
+  document.getElementById('newsBannerClose').addEventListener('click', () => {
     document.getElementById('newsBanner').classList.add('hidden');
   });
-  document.querySelector('#newsBanner .go').addEventListener('click', () => activateTab('events'));
+  document.getElementById('newsBannerGo').addEventListener('click', () => activateTab('events'));
 
   document.querySelectorAll('.faq-q').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -874,7 +969,14 @@
 
     const goCheckout = document.getElementById('goCheckout');
     if(goCheckout){
-      goCheckout.addEventListener('click', () => {
+      goCheckout.addEventListener('click', async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if(!user){
+          closeDrawers();
+          pendingCheckout=true;
+          showCheckoutAuthChoice();
+          return;
+        }
         closeDrawers();
         renderCheckoutForm();
         openDrawer(checkoutDrawer);
@@ -956,74 +1058,6 @@
     renderCartBadge();
   }
 
-
-  // ---------------- AUTH REQUIRED FOR ADD TO CART ----------------
-  // A visitor can browse freely, but must sign in/sign up before an item
-  // is added to the cart. The selected item is preserved across login.
-  const PENDING_CART_ITEM_KEY = 'datihan_pending_cart_item';
-  const RETURN_TO_ADD_CART_KEY = 'datihan_return_to_add_cart';
-
-  async function getCurrentUser(){
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    return user || null;
-  }
-
-  function savePendingCartItem(item){
-    localStorage.setItem(PENDING_CART_ITEM_KEY, JSON.stringify({
-      id: item.id,
-      name: item.name,
-      price: Number(item.price || 0),
-      image_url: item.image_url || ''
-    }));
-    localStorage.setItem(RETURN_TO_ADD_CART_KEY, 'true');
-  }
-
-  function takePendingCartItem(){
-    try{
-      const raw = localStorage.getItem(PENDING_CART_ITEM_KEY);
-      localStorage.removeItem(PENDING_CART_ITEM_KEY);
-      localStorage.removeItem(RETURN_TO_ADD_CART_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){
-      localStorage.removeItem(PENDING_CART_ITEM_KEY);
-      localStorage.removeItem(RETURN_TO_ADD_CART_KEY);
-      return null;
-    }
-  }
-
-  async function handleAddToCart(item){
-    const user = await getCurrentUser();
-
-    if(!user){
-      savePendingCartItem(item);
-      location.href = 'login.html';
-      return;
-    }
-
-    if(!cart[item.id]) cart[item.id] = 0;
-    cart[item.id] += 1;
-    saveCart(cart);
-    renderCartBadge();
-    renderCartDrawer();
-  }
-
-  async function restorePendingCartAfterLogin(){
-    if(localStorage.getItem(RETURN_TO_ADD_CART_KEY) !== 'true') return;
-
-    const user = await getCurrentUser();
-    if(!user) return;
-
-    const item = takePendingCartItem();
-    if(!item) return;
-
-    if(!cart[item.id]) cart[item.id] = 0;
-    cart[item.id] += 1;
-    saveCart(cart);
-    renderCartBadge();
-    renderCartDrawer();
-    openDrawer(cartDrawer);
-  }
-
   // ---------------- AUTHENTICATION UI ----------------
   const authBtn = document.getElementById('authBtn');
   const roleNavBtn = document.getElementById('roleNavBtn');
@@ -1036,6 +1070,64 @@
   const authMessage = document.getElementById('authMessage');
 
   let pendingOtpEmail = '';
+  let pendingCheckout = false;
+
+  function goToLoginForCheckout(){
+    localStorage.setItem('datihan_return_to_checkout','true');
+    location.href = 'login.html';
+  }
+
+  function openCheckoutAfterLogin(){
+    const shouldReturn = localStorage.getItem('datihan_return_to_checkout') === 'true';
+    if(!shouldReturn) return;
+    localStorage.removeItem('datihan_return_to_checkout');
+    if(Object.keys(cart).length){
+      closeAuth();
+      renderCheckoutForm();
+      openDrawer(checkoutDrawer);
+    }
+  }
+
+  function showCheckoutAuthChoice(){
+    authTitle.textContent = 'Login required to checkout';
+    authBody.innerHTML = `
+      <p class="auth-copy">You can browse Datihan without an account. To place an order, choose an option below.</p>
+      <button class="btn btn-primary auth-submit" type="button" id="existingBuyerBtn">I already have an account</button>
+      <button class="btn btn-outline auth-submit" type="button" id="newBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
+      <p class="auth-message">Existing buyers will sign in through the Datihan login page. New buyers can create an account with their email.</p>`;
+    document.getElementById('existingBuyerBtn').addEventListener('click', goToLoginForCheckout);
+    document.getElementById('newBuyerBtn').addEventListener('click', showSignupStep);
+    openAuth();
+  }
+
+  function showSignupStep(){
+    authTitle.textContent = 'Create your buyer account';
+    authBody.innerHTML = `
+      <p class="auth-copy">Enter your email and we'll send you a 6-digit code to create your buyer account.</p>
+      <form id="signupEmailForm">
+        <div class="auth-field">
+          <label for="signupEmail">Email</label>
+          <input id="signupEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+        <button class="btn btn-primary auth-submit" type="submit" id="signupSendBtn">Send Sign-Up Code</button>
+        <p class="auth-message" id="signupMessage" aria-live="polite"></p>
+      </form>
+      <div class="auth-secondary"><button class="auth-link" type="button" id="backAuthChoiceBtn">Back</button></div>`;
+    document.getElementById('backAuthChoiceBtn').addEventListener('click', showCheckoutAuthChoice);
+    document.getElementById('signupEmailForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById('signupEmail').value.trim().toLowerCase();
+      const btn=document.getElementById('signupSendBtn');
+      const message=document.getElementById('signupMessage');
+      if(!email) return;
+      btn.disabled=true; message.textContent='Sending your sign-up code…'; message.className='auth-message';
+      const {error}=await supabaseClient.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+      btn.disabled=false;
+      if(error){message.textContent=error.message||'Could not send the sign-up code.';message.className='auth-message error';return;}
+      pendingOtpEmail=email;
+      showOtpStep();
+    });
+  }
 
   function setAuthMessage(message, type=''){
     authMessage.textContent = message;
@@ -1101,7 +1193,7 @@
   function showOtpStep(){
     authTitle.textContent = 'Check your email';
     authBody.innerHTML = `
-      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to finish signing in.</p>
+      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to ${pendingCheckout ? 'finish creating your buyer account' : 'finish signing in'}.</p>
       <form id="authOtpForm">
         <div class="auth-field">
           <label for="authOtp">6-digit OTP</label>
@@ -1151,6 +1243,11 @@
 
     await refreshAuthUI();
     closeAuth();
+    if(pendingCheckout){
+      pendingCheckout=false;
+      renderCheckoutForm();
+      openDrawer(checkoutDrawer);
+    }
   }
 
   async function resendOtp(){
@@ -1183,7 +1280,7 @@
     if(!user){
       authBtn.textContent = 'Login';
       authBtn.classList.remove('logged-in');
-      authBtn.onclick = () => { location.href = 'login.html'; };
+      authBtn.onclick = openAuth;
       roleNavBtn.classList.remove('show');
       roleNavBtn.textContent = '';
       roleNavBtn.onclick = null;
@@ -1259,13 +1356,14 @@
   // Supabase session changes keep the header account state in sync.
   supabaseClient.auth.onAuthStateChange(() => {
     refreshAuthUI();
-  restorePendingCartAfterLogin();
   });
 
   // ---------------- INIT ----------------
   refreshAuthUI();
   renderCartBadge();
-  loadProducts().then(() => restorePendingCartAfterLogin());
+  openCheckoutAfterLogin();
+  loadProducts();
+  loadBuyerPopups();
 </script>
 
 </body>
