@@ -654,6 +654,8 @@
 
     noResults.textContent = 'Nothing matches that search yet — try a different keyword or category.';
     renderShopGrid();
+    // Complete a cart addition that was waiting for the buyer to sign in.
+    openPendingCartItemAfterLogin();
   }
 
   // ---------------- POP-UPS (SUPABASE) ----------------
@@ -762,16 +764,38 @@
   function peso(n){ return '\u20B1' + n.toLocaleString('en-PH'); }
   function findProduct(id){ return PRODUCTS.find(p => p.id === id); }
 
-  // ---------------- CART (per-browser, localStorage) ----------------
-  const CART_KEY = 'datihan_cart_v1';
-  function loadCart(){
-    try{ return JSON.parse(localStorage.getItem(CART_KEY)) || {}; }
+  // ---------------- CART (per-account, localStorage) ----------------
+  // Each authenticated buyer gets a separate cart key based on their Supabase user id.
+  // This prevents Buyer A and Buyer B from sharing a cart on the same browser.
+  const CART_PREFIX = 'datihan_cart_user_v2_';
+  let activeCartUserId = '';
+  let cart = {}; // { productId: qty } for the currently signed-in account
+
+  function cartStorageKey(userId){
+    return CART_PREFIX + encodeURIComponent(String(userId));
+  }
+
+  function loadCartForUser(userId){
+    if(!userId) return {};
+    try{ return JSON.parse(localStorage.getItem(cartStorageKey(userId))) || {}; }
     catch(e){ return {}; }
   }
-  function saveCart(cart){
-    try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(e){}
+
+  function saveCart(cartData){
+    // Never save a cart without an authenticated account.
+    if(!activeCartUserId) return;
+    try{ localStorage.setItem(cartStorageKey(activeCartUserId), JSON.stringify(cartData)); }catch(e){}
   }
-  let cart = loadCart(); // { productId: qty }
+
+  function switchCartAccount(userId){
+    const nextId = userId ? String(userId) : '';
+    if(nextId === activeCartUserId) return;
+    activeCartUserId = nextId;
+    cart = nextId ? loadCartForUser(nextId) : {};
+    renderCartBadge();
+    renderCartDrawer();
+    renderShopGrid();
+  }
 
   function cartCount(){
     return Object.values(cart).reduce((a,b) => a+b, 0);
@@ -782,13 +806,31 @@
       return sum + (p ? p.price*qty : 0);
     }, 0);
   }
-  function addToCart(id){
+  function addCartItemDirect(id){
     const p = findProduct(id);
-    if(!p || p.soldOut) return;
+    if(!p || p.soldOut) return false;
     cart[id] = (cart[id]||0) + 1;
     saveCart(cart);
     renderCartBadge();
     renderCartDrawer();
+    return true;
+  }
+
+  async function addToCart(id){
+    const p = findProduct(id);
+    if(!p || p.soldOut) return;
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(user){
+      addCartItemDirect(id);
+      renderShopGrid();
+      return;
+    }
+
+    // A buyer must sign in before adding to cart. Save the selected product
+    // temporarily, then let login.html attach it to the authenticated user's cart.
+    localStorage.setItem('datihan_pending_add_to_cart', id);
+    location.href = 'login.html';
   }
   function setQty(id, qty){
     if(qty <= 0){ delete cart[id]; }
@@ -845,7 +887,6 @@
     shopGrid.querySelectorAll('[data-add]').forEach(btn => {
       btn.addEventListener('click', () => {
         addToCart(btn.dataset.add);
-        renderShopGrid();
       });
     });
   }
@@ -1070,9 +1111,16 @@
 
   let pendingOtpEmail = '';
   let pendingCheckout = false;
+  let pendingAddToCartId = '';
 
   function goToLoginForCheckout(){
     localStorage.setItem('datihan_return_to_checkout','true');
+    location.href = 'login.html';
+  }
+
+  function goToLoginForAddToCart(){
+    if(!pendingAddToCartId) return;
+    localStorage.setItem('datihan_pending_add_to_cart', pendingAddToCartId);
     location.href = 'login.html';
   }
 
@@ -1085,6 +1133,63 @@
       renderCheckoutForm();
       openDrawer(checkoutDrawer);
     }
+  }
+
+  async function openPendingCartItemAfterLogin(){
+    const pendingId = localStorage.getItem('datihan_pending_add_to_cart');
+    if(!pendingId) return;
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
+
+    // The pending item is attached to whichever account actually completed login.
+    // It is then saved under that account's own cart key.
+    localStorage.removeItem('datihan_pending_add_to_cart');
+    switchCartAccount(user.id);
+    pendingAddToCartId = '';
+    addCartItemDirect(pendingId);
+    renderShopGrid();
+  }
+
+  function showAddToCartAuthChoice(){
+    authTitle.textContent = 'Sign in to add to cart';
+    authBody.innerHTML = `
+      <p class="auth-copy">Please sign in or create a buyer account before adding items to your cart. Your cart will stay saved when you return.</p>
+      <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
+      <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
+      <p class="auth-message">Your selected item will be added automatically after you finish signing in.</p>`;
+    document.getElementById('existingCartBuyerBtn').addEventListener('click', goToLoginForAddToCart);
+    document.getElementById('newCartBuyerBtn').addEventListener('click', showCartSignupStep);
+    openAuth();
+  }
+
+  function showCartSignupStep(){
+    authTitle.textContent = 'Create your buyer account';
+    authBody.innerHTML = `
+      <p class="auth-copy">Enter your email and we'll send you a 6-digit code to create your buyer account.</p>
+      <form id="cartSignupEmailForm">
+        <div class="auth-field">
+          <label for="cartSignupEmail">Email</label>
+          <input id="cartSignupEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+        <button class="btn btn-primary auth-submit" type="submit" id="cartSignupSendBtn">Send Sign-Up Code</button>
+        <p class="auth-message" id="cartSignupMessage" aria-live="polite"></p>
+      </form>
+      <div class="auth-secondary"><button class="auth-link" type="button" id="backCartAuthChoiceBtn">Back</button></div>`;
+    document.getElementById('backCartAuthChoiceBtn').addEventListener('click', showAddToCartAuthChoice);
+    document.getElementById('cartSignupEmailForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email=document.getElementById('cartSignupEmail').value.trim().toLowerCase();
+      const btn=document.getElementById('cartSignupSendBtn');
+      const message=document.getElementById('cartSignupMessage');
+      if(!email) return;
+      btn.disabled=true; message.textContent='Sending your sign-up code…'; message.className='auth-message';
+      const {error}=await supabaseClient.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+      btn.disabled=false;
+      if(error){message.textContent=error.message||'Could not send the sign-up code.';message.className='auth-message error';return;}
+      pendingOtpEmail=email;
+      showOtpStep();
+    });
   }
 
   function showCheckoutAuthChoice(){
@@ -1192,7 +1297,7 @@
   function showOtpStep(){
     authTitle.textContent = 'Check your email';
     authBody.innerHTML = `
-      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to ${pendingCheckout ? 'finish creating your buyer account' : 'finish signing in'}.</p>
+      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to ${pendingAddToCartId ? 'finish signing in and add your item to the cart' : (pendingCheckout ? 'finish creating your buyer account' : 'finish signing in')}.</p>
       <form id="authOtpForm">
         <div class="auth-field">
           <label for="authOtp">6-digit OTP</label>
@@ -1242,6 +1347,14 @@
 
     await refreshAuthUI();
     closeAuth();
+
+    if(pendingAddToCartId){
+      const id = pendingAddToCartId;
+      pendingAddToCartId = '';
+      addCartItemDirect(id);
+      renderShopGrid();
+    }
+
     if(pendingCheckout){
       pendingCheckout=false;
       renderCheckoutForm();
@@ -1277,14 +1390,20 @@
   async function refreshAuthUI(){
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user){
+      // Clear only the in-memory cart when signed out. The signed-out account's
+      // saved cart remains untouched and will return when that same account logs in again.
+      switchCartAccount('');
       authBtn.textContent = 'Login';
       authBtn.classList.remove('logged-in');
-      authBtn.onclick = openAuth;
+      authBtn.onclick = () => { location.href = 'login.html'; };
       roleNavBtn.classList.remove('show');
       roleNavBtn.textContent = '';
       roleNavBtn.onclick = null;
       return;
     }
+
+    // Load this account's cart before showing the signed-in store UI.
+    switchCartAccount(user.id);
 
     const { data: profile, error } = await supabaseClient
       .from('profiles')
@@ -1343,7 +1462,6 @@
     openAuth();
   }
 
-  authBtn.addEventListener('click', openAuth);
   authClose.addEventListener('click', closeAuth);
   authBackdrop.addEventListener('click', event => {
     if(event.target === authBackdrop) closeAuth();
@@ -1359,8 +1477,8 @@
 
   // ---------------- INIT ----------------
   refreshAuthUI();
-  renderCartBadge();
   openCheckoutAfterLogin();
+  openPendingCartItemAfterLogin();
   loadProducts();
   loadBuyerPopups();
 </script>
