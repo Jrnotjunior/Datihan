@@ -284,15 +284,6 @@
     banner.hidden=true;
   });
 
-  document.querySelectorAll('.faq-q').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const expanded = btn.getAttribute('aria-expanded') === 'true';
-      const answer = btn.nextElementSibling;
-      btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-      answer.style.maxHeight = expanded ? '0px' : answer.scrollHeight + 'px';
-    });
-  });
-
   // ---------------- CART DRAWER ----------------
   const overlayBg = document.getElementById('overlayBg');
   const cartDrawer = document.getElementById('cartDrawer');
@@ -347,273 +338,184 @@
         + '</div>';
     }).join('');
 
-    cartBody.querySelectorAll('[data-step]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const line = btn.closest('.cart-line');
-        const id = line.dataset.id;
-        setQty(id, cart[id] + Number(btn.dataset.step));
+    cartBody.querySelectorAll('.cart-line').forEach(line => {
+      const id = line.dataset.id;
+      line.querySelectorAll('[data-step]').forEach(btn => {
+        btn.addEventListener('click', () => setQty(id, cart[id] + Number(btn.dataset.step)));
       });
-    });
-    cartBody.querySelectorAll('[data-remove]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.closest('.cart-line').dataset.id;
-        setQty(id, 0);
-      });
+      line.querySelector('[data-remove]').addEventListener('click', () => setQty(id, 0));
     });
 
-    cartFoot.innerHTML = `
-      <div class="cart-total"><span>Total</span><strong>${peso(cartTotal())}</strong></div>
-      <button class="btn btn-primary checkout-btn" id="checkoutBtn" type="button">Checkout</button>`;
-    document.getElementById('checkoutBtn').addEventListener('click', async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if(!user){
-        pendingCheckout=true;
-        showCheckoutAuthChoice();
-        return;
-      }
-      renderCheckoutForm();
-      openDrawer(checkoutDrawer);
-    });
+    const total = cartTotal();
+    cartFoot.innerHTML = '<div class="cart-total"><span>Total</span><strong>'+peso(total)+'</strong></div>'
+      + '<button class="btn btn-primary checkout-btn" id="checkoutBtn" type="button">Proceed to checkout</button>';
+    document.getElementById('checkoutBtn').addEventListener('click', openCheckout);
   }
 
-  function renderCheckoutForm(){
-    checkoutDrawer.querySelector('.drawer-head h2').textContent = 'Checkout';
+  // ---------------- CHECKOUT ----------------
+  const checkoutBody = document.getElementById('checkoutBody');
+  let checkoutProfile = null;
+
+  function showCheckoutAuthChoice(){
     checkoutBody.innerHTML = `
-      <div class="checkout-summary">
-        <div class="tag-font">ORDER SUMMARY</div>
-        ${Object.entries(cart).map(([id,qty])=>{
-          const p=findProduct(id);
-          return p ? `<div class="checkout-line"><span>${escapeHtml(p.name)} × ${qty}</span><strong>${peso(p.price*qty)}</strong></div>` : '';
-        }).join('')}
-        <div class="checkout-total"><span>Total</span><strong>${peso(cartTotal())}</strong></div>
-      </div>
-      <form id="checkoutForm" class="checkout-form">
-        <div class="checkout-field"><label for="buyerName">Full name</label><input id="buyerName" required></div>
-        <div class="checkout-field"><label for="buyerPhone">Phone</label><input id="buyerPhone" required></div>
-        <div class="checkout-field"><label for="buyerAddress">Delivery address</label><textarea id="buyerAddress" rows="3" required></textarea></div>
-        <div class="checkout-field"><label for="buyerNote">Note (optional)</label><textarea id="buyerNote" rows="2"></textarea></div>
-        <button class="btn btn-primary" type="submit">Place order — COD</button>
-        <p class="checkout-message" id="checkoutMessage"></p>
-      </form>`;
-    const checkoutForm=document.getElementById('checkoutForm');
-    checkoutForm.addEventListener('submit', async event => {
-      event.preventDefault();
-      const user=(await supabaseClient.auth.getUser()).data.user;
-      if(!user){
-        pendingCheckout=true;
-        showCheckoutAuthChoice();
-        return;
-      }
-      const msg=document.getElementById('checkoutMessage');
-      const submit=checkoutForm.querySelector('button[type="submit"]');
-      submit.disabled=true;
-      msg.textContent='Placing your order…';
-      const payload={
-        user_id:user.id,
-        customer_name:document.getElementById('buyerName').value.trim(),
-        phone:document.getElementById('buyerPhone').value.trim(),
-        address:document.getElementById('buyerAddress').value.trim(),
-        note:document.getElementById('buyerNote').value.trim(),
-        total_amount:cartTotal(),
-        items:Object.entries(cart).map(([id,qty])=>({product_id:id,quantity:qty}))
-      };
-      const {error}=await supabaseClient.from('orders').insert(payload);
-      if(error){
-        msg.textContent=error.message||'Could not place the order.';
-        submit.disabled=false;
-        return;
-      }
-      msg.textContent='Order placed successfully. We will contact you to confirm delivery.';
-      cart={};
-      saveCart(cart);
-      renderCartBadge();
-      renderCartDrawer();
-    });
+      <div class="checkout-auth">
+        <h3 class="display">Continue to checkout</h3>
+        <p>Please sign in or create a buyer account before checking out.</p>
+        <div class="checkout-auth-actions">
+          <button class="btn btn-primary" type="button" id="checkoutExistingBtn">I already have an account</button>
+          <button class="btn btn-outline" type="button" id="checkoutNewBtn">I'm a new buyer — Sign Up</button>
+        </div>
+      </div>`;
+    document.getElementById('checkoutExistingBtn').addEventListener('click', showCheckoutLogin);
+    document.getElementById('checkoutNewBtn').addEventListener('click', showCheckoutSignup);
   }
 
-  // ---------------- AUTHENTICATION UI ----------------
-  const authBtn = document.getElementById('authBtn');
-  const roleNavBtn = document.getElementById('roleNavBtn');
-  const authBackdrop = document.getElementById('authBackdrop');
-  const authClose = document.getElementById('authClose');
-  const authBody = document.getElementById('authBody');
-  const authTitle = document.getElementById('authTitle');
-  const authEmailForm = document.getElementById('authEmailForm');
-  const authEmail = document.getElementById('authEmail');
-  const authMessage = document.getElementById('authMessage');
-
-  let pendingOtpEmail = '';
-  let pendingCheckout = false;
-  let pendingAddToCartId = null;
-
-  function goToLoginForCheckout(){
-    localStorage.setItem('datihan_return_to_checkout','true');
+  function showCheckoutLogin(){
     location.href = 'login.html';
   }
 
-  function openCheckoutAfterLogin(){
-    const shouldReturn = localStorage.getItem('datihan_return_to_checkout') === 'true';
-    if(!shouldReturn) return;
-    localStorage.removeItem('datihan_return_to_checkout');
-    if(Object.keys(cart).length){
-      closeAuth();
-      renderCheckoutForm();
-      openDrawer(checkoutDrawer);
-    }
-  }
-
-  function goToLoginForCart(){
-    if(pendingAddToCartId){
-      localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
-    }
-    location.href = 'login.html';
-  }
-
-  function goToSignupForCart(){
-    if(pendingAddToCartId){
-      localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
-    }
+  function showCheckoutSignup(){
     location.href = 'signup.html';
   }
 
-  function showAddToCartAuthChoice(){
-    authTitle.textContent = 'Login required to add to cart';
-    authBody.innerHTML = `
-      <p class="auth-copy">Please sign in or create a Datihan account before adding an item. Your cart will be preserved after you sign in.</p>
-      <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
-      <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
-      <p class="auth-message">You can browse the store without an account. An account is required to keep your cart connected to you.</p>`;
-    document.getElementById('existingCartBuyerBtn').addEventListener('click', goToLoginForCart);
-    document.getElementById('newCartBuyerBtn').addEventListener('click', goToSignupForCart);
-    openAuth();
+  async function openCheckout(){
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user){
+      showCheckoutAuthChoice();
+      openDrawer(checkoutDrawer);
+      return;
+    }
+    checkoutProfile = user;
+    renderCheckoutForm(user);
+    openDrawer(checkoutDrawer);
   }
 
-  function showCheckoutAuthChoice(){
-    authTitle.textContent = 'Login required to checkout';
-    authBody.innerHTML = `
-      <p class="auth-copy">You can browse Datihan without an account. To place an order, choose an option below.</p>
-      <button class="btn btn-primary auth-submit" type="button" id="existingBuyerBtn">I already have an account</button>
-      <button class="btn btn-outline auth-submit" type="button" id="newBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
-      <p class="auth-message">Existing buyers will sign in through the Datihan login page. New buyers can create an account with their email.</p>`;
-    document.getElementById('existingBuyerBtn').addEventListener('click', goToLoginForCheckout);
-    document.getElementById('newBuyerBtn').addEventListener('click', showSignupStep);
-    openAuth();
-  }
-
-  function showSignupStep(){
-    authTitle.textContent = 'Create your buyer account';
-    authBody.innerHTML = `
-      <p class="auth-copy">Enter your email and we'll send you a 6-digit code to create your buyer account.</p>
-      <form id="signupEmailForm">
-        <div class="auth-field">
-          <label for="signupEmail">Email</label>
-          <input id="signupEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+  function renderCheckoutForm(user){
+    checkoutBody.innerHTML = `
+      <form id="checkoutForm" class="checkout-form">
+        <div class="checkout-grid">
+          <div class="field"><label for="buyerName">Full name</label><input id="buyerName" required value=""></div>
+          <div class="field"><label for="buyerPhone">Phone</label><input id="buyerPhone" required></div>
         </div>
-        <button class="btn btn-primary auth-submit" type="submit" id="signupSendBtn">Send Sign-Up Code</button>
-        <p class="auth-message" id="signupMessage" aria-live="polite"></p>
-      </form>
-      <div class="auth-secondary"><button class="auth-link" type="button" id="backAuthChoiceBtn">Back</button></div>`;
-    document.getElementById('backAuthChoiceBtn').addEventListener('click', showCheckoutAuthChoice);
-    document.getElementById('signupEmailForm').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const email=document.getElementById('signupEmail').value.trim().toLowerCase();
-      const btn=document.getElementById('signupSendBtn');
-      const message=document.getElementById('signupMessage');
-      if(!email) return;
-      btn.disabled=true; message.textContent='Sending your sign-up code…'; message.className='auth-message';
-      const {error}=await supabaseClient.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
-      btn.disabled=false;
-      if(error){message.textContent=error.message||'Could not send the sign-up code.';message.className='auth-message error';return;}
-      pendingOtpEmail=email;
-      showOtpStep();
-    });
+        <div class="field"><label for="buyerAddress">Delivery address</label><textarea id="buyerAddress" rows="3" required></textarea></div>
+        <div class="field"><label for="buyerNotes">Notes</label><textarea id="buyerNotes" rows="3" placeholder="Optional"></textarea></div>
+        <button class="btn btn-primary" type="submit">Place order</button>
+        <p class="auth-message" id="checkoutMessage" aria-live="polite"></p>
+      </form>`;
+
+    document.getElementById('checkoutForm').addEventListener('submit', submitCheckout);
   }
 
-  function setAuthMessage(message, type=''){
-    authMessage.textContent = message;
-    authMessage.className = 'auth-message' + (type ? ' ' + type : '');
+  async function submitCheckout(e){
+    e.preventDefault();
+    const message = document.getElementById('checkoutMessage');
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    message.textContent = 'Placing order…';
+    message.className = 'auth-message';
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user){
+      location.href='login.html';
+      return;
+    }
+
+    const orderItems = Object.entries(cart).map(([id,qty]) => ({
+      product_id: id,
+      quantity: qty,
+      price: findProduct(id)?.price || 0
+    }));
+
+    const total = cartTotal();
+    const { error } = await supabaseClient.from('orders').insert({
+      user_id: user.id,
+      customer_name: document.getElementById('buyerName').value.trim(),
+      phone: document.getElementById('buyerPhone').value.trim(),
+      address: document.getElementById('buyerAddress').value.trim(),
+      notes: document.getElementById('buyerNotes').value.trim(),
+      items: orderItems,
+      total_amount: total,
+      status: 'pending'
+    });
+
+    if(error){
+      message.textContent = error.message;
+      message.className = 'auth-message error';
+      btn.disabled = false;
+      return;
+    }
+
+    cart = {};
+    saveCart(cart);
+    renderCartBadge();
+    renderCartDrawer();
+    message.textContent = 'Order placed successfully.';
+    message.className = 'auth-message success';
+    btn.disabled = false;
   }
+
+  // ---------------- AUTH / ACCOUNT ----------------
+  const authBackdrop = document.getElementById('authBackdrop');
+  const authModal = document.getElementById('authModal');
+  const authTitle = document.getElementById('authTitle');
+  const authBody = document.getElementById('authBody');
+  const authClose = document.getElementById('authClose');
+  const authBtn = document.getElementById('authBtn');
+  const roleNavBtn = document.getElementById('roleNavBtn');
+  let pendingOtpEmail = '';
 
   function openAuth(){
     authBackdrop.classList.add('open');
-    authBackdrop.setAttribute('aria-hidden','false');
-    setTimeout(() => {
-      const input = document.getElementById('authEmail');
-      if(input) input.focus();
-    }, 0);
+    authModal.classList.add('open');
+    showCheckoutAuthChoice();
   }
 
   function closeAuth(){
     authBackdrop.classList.remove('open');
-    authBackdrop.setAttribute('aria-hidden','true');
+    authModal.classList.remove('open');
   }
 
-  function showEmailStep(copyText="Sign in or create your Datihan account to continue. We\'ll send a 6-digit one-time code.") {
+  function showEmailStep(){
     authTitle.textContent = 'Sign in to Datihan';
     authBody.innerHTML = `
-      <p class="auth-copy">${escapeHtml(copyText)}</p>
+      <p class="auth-copy">Enter your email and we'll send you a 6-digit code to sign in.</p>
       <form id="authEmailForm">
         <div class="auth-field">
           <label for="authEmail">Email</label>
           <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
         </div>
-        <button class="btn btn-primary auth-submit" type="submit" id="sendOtpBtn">Send OTP</button>
+        <button class="btn btn-primary auth-submit" type="submit">Send OTP</button>
         <p class="auth-message" id="authMessage" aria-live="polite"></p>
       </form>`;
-    bindEmailStep();
-  }
-
-  function bindEmailStep(){
-    const form = document.getElementById('authEmailForm');
-    const emailInput = document.getElementById('authEmail');
-    const message = document.getElementById('authMessage');
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const email = emailInput.value.trim().toLowerCase();
-      if(!email) return;
-      const btn = document.getElementById('sendOtpBtn');
-      btn.disabled = true;
-      message.textContent = 'Sending your code…';
-      message.className = 'auth-message';
-
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true }
-      });
-
-      btn.disabled = false;
+    document.getElementById('authEmailForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value.trim();
+      const message = document.getElementById('authMessage');
+      message.textContent = 'Sending…';
+      const { error } = await supabaseClient.auth.signInWithOtp({ email, options:{ shouldCreateUser:false } });
       if(error){
-        message.textContent = error.message || 'We could not send the code. Please try again.';
+        message.textContent = error.message;
         message.className = 'auth-message error';
         return;
       }
-
       pendingOtpEmail = email;
       showOtpStep();
     });
   }
 
   function showOtpStep(){
-    authTitle.textContent = 'Check your email';
+    authTitle.textContent = 'Enter your code';
     authBody.innerHTML = `
-      <p class="auth-copy">We sent a 6-digit code to <strong>${escapeHtml(pendingOtpEmail)}</strong>. Enter it below to ${pendingCheckout ? 'finish creating your buyer account' : 'finish signing in'}.</p>
+      <p class="auth-copy">Check your email for the 6-digit code.</p>
       <form id="authOtpForm">
         <div class="auth-field">
-          <label for="authOtp">6-digit OTP</label>
-          <input id="authOtp" class="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}" placeholder="123456" required>
+          <label for="authOtp">Code</label>
+          <input id="authOtp" inputmode="numeric" maxlength="6" required>
         </div>
-        <button class="btn btn-primary auth-submit" type="submit" id="verifyOtpBtn">Verify OTP</button>
+        <button class="btn btn-primary auth-submit" id="verifyOtpBtn" type="submit">Verify & Sign In</button>
         <p class="auth-message" id="authMessage" aria-live="polite"></p>
-      </form>
-      <div class="auth-secondary">
-        <button class="auth-link" type="button" id="changeEmailBtn">Use another email</button>
-        <button class="auth-link" type="button" id="resendOtpBtn">Resend code</button>
-      </div>`;
-
-    document.getElementById('authOtp').focus();
+      </form>`;
     document.getElementById('authOtpForm').addEventListener('submit', verifyOtp);
-    document.getElementById('changeEmailBtn').addEventListener('click', () => { pendingOtpEmail=''; showEmailStep(); });
-    document.getElementById('resendOtpBtn').addEventListener('click', resendOtp);
   }
 
   async function verifyOtp(event){
@@ -626,76 +528,24 @@
       message.className = 'auth-message error';
       return;
     }
-
     btn.disabled = true;
     message.textContent = 'Verifying…';
-    message.className = 'auth-message';
-
-    const { error } = await supabaseClient.auth.verifyOtp({
-      email: pendingOtpEmail,
-      token,
-      type: 'email'
-    });
-
-    btn.disabled = false;
+    const { error } = await supabaseClient.auth.verifyOtp({ email: pendingOtpEmail, token, type: 'email' });
     if(error){
-      message.textContent = error.message || 'That code could not be verified. Please try again.';
+      message.textContent = error.message;
       message.className = 'auth-message error';
+      btn.disabled = false;
       return;
     }
-
-    await refreshAuthUI();
     closeAuth();
-
-    if(pendingAddToCartId){
-      const id = pendingAddToCartId;
-      pendingAddToCartId = null;
-      const product = findProduct(id);
-      if(product && !product.soldOut){
-        cart[id] = (cart[id]||0) + 1;
-        saveCart(cart);
-        renderCartBadge();
-        renderCartDrawer();
-        renderShopGrid();
-      }
-    }
-
-    if(pendingCheckout){
-      pendingCheckout=false;
-      renderCheckoutForm();
-      openDrawer(checkoutDrawer);
-    }
-  }
-
-  async function resendOtp(){
-    if(!pendingOtpEmail) return;
-    const btn = document.getElementById('resendOtpBtn');
-    const message = document.getElementById('authMessage');
-    btn.disabled = true;
-    message.textContent = 'Sending a new code…';
-    message.className = 'auth-message';
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email: pendingOtpEmail,
-      options: { shouldCreateUser: true }
-    });
-    btn.disabled = false;
-    if(error){
-      message.textContent = error.message || 'Could not resend the code.';
-      message.className = 'auth-message error';
-      return;
-    }
-    message.textContent = 'A new code has been sent.';
-    message.className = 'auth-message success';
-  }
-
-  function escapeHtml(value){
-    return String(value ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
+    await refreshAuthUI();
   }
 
   async function refreshAuthUI(){
-    const {data:{user}} = await supabaseClient.auth.getUser();
+    const { data:{ user } } = await supabaseClient.auth.getUser();
     if(user){
-      authBtn.textContent = user.email || 'Account';
+      const name = user.email || 'Account';
+      authBtn.textContent = name.length > 18 ? name.slice(0,18) + '…' : name;
       authBtn.classList.add('signed-in');
       authBtn.onclick = async () => {
         await supabaseClient.auth.signOut();
@@ -719,19 +569,9 @@
     }
   }
 
-  authBtn.addEventListener('click', () => { location.href = 'login.html'; });
-  authClose.addEventListener('click', closeAuth);
-  authBackdrop.addEventListener('click', event => {
-    if(event.target === authBackdrop) closeAuth();
-  });
-  document.addEventListener('keydown', event => {
-    if(event.key === 'Escape' && authBackdrop.classList.contains('open')) closeAuth();
-  });
-
   // ---------------- INIT ----------------
-  renderCartBadge();
-  renderShopGrid();
   refreshAuthUI();
+  renderCartBadge();
   openCheckoutAfterLogin();
   loadProducts();
   loadPopups();
