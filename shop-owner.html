@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Datihan Shop Owner</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 :root{--ink:#171717;--paper:#f1f0ec;--panel:#f8f8f5;--line:#c9c9c3;--red:#b42318}
@@ -416,19 +417,25 @@ $('modalTitle').addEventListener('pointerup',()=>dragging=false);
 $('modalTitle').addEventListener('pointercancel',()=>dragging=false);
 
 (async()=>{
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  s.onload=async()=>{
+  try{
+    if(!window.supabase){throw new Error('Supabase library did not load. Please check your internet connection or GitHub Pages deployment.');}
     supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data:{user}}=await supabaseClient.auth.getUser();
+    const {data:{user},error:userError}=await supabaseClient.auth.getUser();
+    if(userError) throw userError;
     if(!user){location.href='login.html';return}
     const {data:profile,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
-    if(error||!['shop_owner','admin'].includes(profile?.role)){
+    if(error) throw error;
+    if(!['shop_owner','admin'].includes(profile?.role)){
       location.href=profile?.role==='admin'?'admin.html':'index.html';return;
     }
     await loadInventory();
-  };
-  document.head.appendChild(s);
+  }catch(err){
+    console.error('Shop Owner initialization failed:',err);
+    const box=document.createElement('div');
+    box.style='max-width:760px;margin:80px auto;padding:24px;border:1px solid #b42318;background:#fff7f6;color:#9b241a;font-family:Courier New,monospace;line-height:1.6';
+    box.innerHTML='<h2 style="margin-top:0">Shop Owner page could not load</h2><p>'+esc(err?.message||err)+'</p><p>Open F12 → Console for the full error.</p>';
+    document.body.innerHTML='';document.body.appendChild(box);
+  }
 })();
 </script>
 </body>
