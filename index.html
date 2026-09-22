@@ -295,12 +295,12 @@
 </head>
 <body>
 
-<div id="newsBanner">
+<div id="newsBanner" class="hidden" hidden>
   <div class="inner">
     <span class="pin">●</span>
-    <span class="msg">Pop-up alert — Datihan at Cafe Ibarra, coming soon</span>
-    <button class="go" data-goto="events">See details</button>
-    <button class="close" aria-label="Dismiss">&times;</button>
+    <span class="msg" id="newsBannerMsg"></span>
+    <button class="go" id="newsBannerGo" type="button">See details</button>
+    <button class="close" id="newsBannerClose" aria-label="Dismiss">&times;</button>
   </div>
 </div>
 
@@ -363,12 +363,13 @@
       </div>
     </div>
 
-    <div class="teaser-card" style="margin-top:56px;">
+    <div class="teaser-card" id="homePopupTeaser" style="margin-top:56px;">
       <div>
-        <div class="tag-font">NEXT POP-UP</div>
-        <h3 class="display">Cafe Ibarra</h3>
+        <div class="tag-font" id="homePopupLabel">NEXT POP-UP</div>
+        <h3 class="display" id="homePopupTitle">No upcoming pop-ups</h3>
+        <p id="homePopupMeta" style="margin:6px 0 0; opacity:.78;"></p>
       </div>
-      <button class="btn btn-outline" data-goto="events">See all pop-ups</button>
+      <button class="btn btn-outline" id="homePopupButton" type="button">View pop-ups</button>
     </div>
   </div>
 
@@ -405,10 +406,10 @@
       </div>
     </div>
 
-    <div class="event-list">
+    <div class="event-list" id="popupEventList">
       <div class="event-row">
-        <div class="event-info"><h3>Cafe Ibarra</h3></div>
-        <div class="event-status">Upcoming</div>
+        <div class="event-info"><h3>Loading pop-ups…</h3><p>Checking the latest announcements.</p></div>
+        <div class="event-status">Please wait</div>
       </div>
     </div>
 
@@ -483,12 +484,7 @@
           </a>
         </div>
       </div>
-      <div class="impact">
-        <div class="box"><b>3,000+</b><span>pieces resold to date</span></div>
-        <div class="box"><b>60+</b><span>consignors so far</span></div>
-        <div class="box"><b>2022</b><span>the year Datihan's first rack popped up</span></div>
-        <div class="box"><b>No shop</b><span>just pop-ups, drops, and DMs</span></div>
-      </div>
+      <!-- Impact statistics removed so the About page does not show hardcoded figures. -->
     </div>
 
     <div style="margin-top:56px;">
@@ -688,9 +684,17 @@
       return sum + (p ? p.price*qty : 0);
     }, 0);
   }
-  function addToCart(id){
+  async function addToCart(id){
     const p = findProduct(id);
     if(!p || p.soldOut) return;
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user){
+      pendingAddToCartId = id;
+      showAddToCartAuthChoice();
+      return;
+    }
+
     cart[id] = (cart[id]||0) + 1;
     saveCart(cart);
     renderCartBadge();
@@ -749,8 +753,8 @@
     noResults.style.display = visible.length === 0 ? 'block' : 'none';
 
     shopGrid.querySelectorAll('[data-add]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        addToCart(btn.dataset.add);
+      btn.addEventListener('click', async () => {
+        await addToCart(btn.dataset.add);
         renderShopGrid();
       });
     });
@@ -786,10 +790,110 @@
     });
   });
 
-  document.querySelector('#newsBanner .close').addEventListener('click', () => {
-    document.getElementById('newsBanner').classList.add('hidden');
+  // ---------------- POP-UPS / ALERTS (SHOP OWNER CONTROLLED) ----------------
+  let ACTIVE_POPUPS = [];
+
+  function popupDateText(value){
+    return value ? new Date(value + 'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}) : '';
+  }
+
+  function popupTimeText(value){
+    if(!value) return '';
+    const parts=String(value).slice(0,5).split(':');
+    const d=new Date(2000,0,1,Number(parts[0]),Number(parts[1]));
+    return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  }
+
+  function popupStatus(p){
+    if(!p.event_date) return 'Announcement';
+    const now = new Date();
+    const [y,m,d] = p.event_date.split('-').map(Number);
+    const start = p.start_time ? new Date(y,m-1,d,...String(p.start_time).slice(0,5).split(':').map(Number)) : new Date(y,m-1,d,0,0);
+    const end = p.end_time ? new Date(y,m-1,d,...String(p.end_time).slice(0,5).split(':').map(Number)) : new Date(y,m-1,d,23,59,59,999);
+    if(now < start) return 'Upcoming';
+    if(now <= end) return 'Ongoing';
+    return 'Ended';
+  }
+
+  function popupDestination(value){
+    return ['home','shop','events','consign','about'].includes(value) ? value : 'events';
+  }
+
+  function renderPopups(){
+    const list = document.getElementById('popupEventList');
+    const homeTitle = document.getElementById('homePopupTitle');
+    const homeMeta = document.getElementById('homePopupMeta');
+    const homeButton = document.getElementById('homePopupButton');
+    const banner = document.getElementById('newsBanner');
+    const bannerMsg = document.getElementById('newsBannerMsg');
+    const bannerGo = document.getElementById('newsBannerGo');
+    if(!list) return;
+
+    if(!ACTIVE_POPUPS.length){
+      list.innerHTML = '<div class="event-row"><div class="event-info"><h3>No pop-ups available</h3><p>Check back later for the next Datihan announcement.</p></div><div class="event-status">Stay tuned</div></div>';
+      if(homeTitle) homeTitle.textContent = 'No upcoming pop-ups';
+      if(homeMeta) homeMeta.textContent = 'Check back later for the next Datihan announcement.';
+      if(homeButton){ homeButton.textContent='View pop-ups'; homeButton.onclick=()=>activateTab('events'); }
+      if(banner){ banner.hidden=true; banner.classList.add('hidden'); }
+      return;
+    }
+
+    list.innerHTML = ACTIVE_POPUPS.map(p => {
+      const title = escapeHtml(p.title || 'Datihan pop-up');
+      const message = escapeHtml(p.message || '');
+      const location = escapeHtml(p.location || '');
+      const date = popupDateText(p.event_date);
+      const time = [popupTimeText(p.start_time),popupTimeText(p.end_time)].filter(Boolean).join(' – ');
+      const meta = [location,date,time].filter(Boolean).join(' · ');
+      return '<div class="event-row"><div class="event-info"><h3>'+title+'</h3><p>'+message+(meta?' · '+meta:'')+'</p></div><div class="event-status">'+popupStatus(p)+'</div></div>';
+    }).join('');
+
+    const first = ACTIVE_POPUPS[0];
+    const firstTitle = first.title || 'Datihan pop-up';
+    const firstMeta = [first.message,first.location,popupDateText(first.event_date),[popupTimeText(first.start_time),popupTimeText(first.end_time)].filter(Boolean).join(' – ')].filter(Boolean).join(' · ');
+    const firstButton = first.button_text || 'See details';
+    const destination = popupDestination(first.button_tab);
+
+    if(homeTitle) homeTitle.textContent = firstTitle;
+    if(homeMeta) homeMeta.textContent = firstMeta;
+    if(homeButton){
+      homeButton.textContent = firstButton;
+      homeButton.onclick = () => activateTab(destination);
+    }
+
+    if(banner){
+      banner.hidden=false;
+      banner.classList.remove('hidden');
+      if(bannerMsg) bannerMsg.textContent = first.message ? firstTitle + ' — ' + first.message : firstTitle;
+      if(bannerGo){
+        bannerGo.textContent = firstButton;
+        bannerGo.onclick = () => activateTab(destination);
+      }
+    }
+  }
+
+  async function loadPopups(){
+    const {data,error} = await supabaseClient
+      .from('popups')
+      .select('*')
+      .eq('is_active', true)
+      .order('event_date',{ascending:true,nullsFirst:false})
+      .order('created_at',{ascending:false});
+
+    if(error){
+      console.error('Could not load pop-ups:', error);
+      ACTIVE_POPUPS=[];
+    }else{
+      ACTIVE_POPUPS=data||[];
+    }
+    renderPopups();
+  }
+
+  document.getElementById('newsBannerClose').addEventListener('click', () => {
+    const banner=document.getElementById('newsBanner');
+    banner.classList.add('hidden');
+    banner.hidden=true;
   });
-  document.querySelector('#newsBanner .go').addEventListener('click', () => activateTab('events'));
 
   document.querySelectorAll('.faq-q').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -976,6 +1080,7 @@
 
   let pendingOtpEmail = '';
   let pendingCheckout = false;
+  let pendingAddToCartId = null;
 
   function goToLoginForCheckout(){
     localStorage.setItem('datihan_return_to_checkout','true');
@@ -991,6 +1096,18 @@
       renderCheckoutForm();
       openDrawer(checkoutDrawer);
     }
+  }
+
+  function showAddToCartAuthChoice(){
+    authTitle.textContent = 'Login required to add to cart';
+    authBody.innerHTML = `
+      <p class="auth-copy">Please sign in or create a Datihan account before adding an item. Your cart will be preserved after you sign in.</p>
+      <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
+      <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
+      <p class="auth-message">You can browse the store without an account. An account is required to keep your cart connected to you.</p>`;
+    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => showEmailStep('Sign in to your Datihan account to continue.'));
+    document.getElementById('newCartBuyerBtn').addEventListener('click', showSignupStep);
+    openAuth();
   }
 
   function showCheckoutAuthChoice(){
@@ -1050,10 +1167,10 @@
     authBackdrop.setAttribute('aria-hidden','true');
   }
 
-  function showEmailStep(){
+  function showEmailStep(copyText="Sign in or create your Datihan account to continue. We\'ll send a 6-digit one-time code.") {
     authTitle.textContent = 'Sign in to Datihan';
     authBody.innerHTML = `
-      <p class="auth-copy">Enter your email and we'll send you a 6-digit one-time code. No password needed.</p>
+      <p class="auth-copy">${escapeHtml(copyText)}</p>
       <form id="authEmailForm">
         <div class="auth-field">
           <label for="authEmail">Email</label>
@@ -1148,6 +1265,20 @@
 
     await refreshAuthUI();
     closeAuth();
+
+    if(pendingAddToCartId){
+      const id = pendingAddToCartId;
+      pendingAddToCartId = null;
+      const product = findProduct(id);
+      if(product && !product.soldOut){
+        cart[id] = (cart[id]||0) + 1;
+        saveCart(cart);
+        renderCartBadge();
+        renderCartDrawer();
+        renderShopGrid();
+      }
+    }
+
     if(pendingCheckout){
       pendingCheckout=false;
       renderCheckoutForm();
@@ -1185,7 +1316,7 @@
     if(!user){
       authBtn.textContent = 'Login';
       authBtn.classList.remove('logged-in');
-      authBtn.onclick = () => { location.href = 'login.html'; };
+      authBtn.onclick = openAuth;
       roleNavBtn.classList.remove('show');
       roleNavBtn.textContent = '';
       roleNavBtn.onclick = null;
@@ -1211,11 +1342,11 @@
     // enters the public store (index.html). Buyers do not see this button.
     const role = profile?.role || 'buyer';
     if(role === 'admin'){
-      roleNavBtn.textContent = 'Admin Dashboard';
+      roleNavBtn.textContent = '← Admin Dashboard';
       roleNavBtn.classList.add('show');
       roleNavBtn.onclick = () => { location.href = 'admin.html'; };
     }else if(role === 'shop_owner'){
-      roleNavBtn.textContent = 'Shop Owner Dashboard';
+      roleNavBtn.textContent = '← Shop Owner';
       roleNavBtn.classList.add('show');
       roleNavBtn.onclick = () => { location.href = 'shop-owner.html'; };
     }else{
@@ -1249,7 +1380,7 @@
     openAuth();
   }
 
-  authBtn.addEventListener('click', () => { location.href = 'login.html'; });
+  authBtn.addEventListener('click', openAuth);
   authClose.addEventListener('click', closeAuth);
   authBackdrop.addEventListener('click', event => {
     if(event.target === authBackdrop) closeAuth();
@@ -1268,6 +1399,7 @@
   renderCartBadge();
   openCheckoutAfterLogin();
   loadProducts();
+  loadPopups();
 </script>
 
 </body>
