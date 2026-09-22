@@ -1104,8 +1104,18 @@
       <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
       <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
       <p class="auth-message">You can browse the store without an account. An account is required to keep your cart connected to you.</p>`;
-    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => showEmailStep('Sign in to your Datihan account to continue.'));
-    document.getElementById('newCartBuyerBtn').addEventListener('click', showSignupStep);
+    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => {
+      if(pendingAddToCartId){
+        localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
+      }
+      location.href = 'login.html';
+    });
+    document.getElementById('newCartBuyerBtn').addEventListener('click', () => {
+      if(pendingAddToCartId){
+        localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
+      }
+      location.href = 'signup.html';
+    });
     openAuth();
   }
 
