@@ -76,10 +76,57 @@
       return;
     }
 
-    (data || []).forEach(row => {
-      // Current Datihan inventory is one-of-a-kind: normalize every cart item to 1.
-      cart[String(row.product_id)] = Number(row.quantity) > 0 ? 1 : 0;
+    const rows = data || [];
+    if(rows.length === 0){
+      renderCartBadge();
+      return;
+    }
+
+    // A cart can contain an item that another buyer has already purchased.
+    // The public shop hides sold inventory, so remove stale cart rows too.
+    // Otherwise the drawer can look empty while the badge still counts them.
+    const productIds = rows.map(row => String(row.product_id));
+    const { data: inventoryRows, error: inventoryError } = await supabaseClient
+      .from('inventory')
+      .select('id,status')
+      .in('id', productIds);
+
+    if(inventoryError){
+      console.error('Could not verify cart item availability:', inventoryError);
+      rows.forEach(row => {
+        cart[String(row.product_id)] = Number(row.quantity) > 0 ? 1 : 0;
+      });
+      renderCartBadge();
+      return;
+    }
+
+    const availableIds = new Set(
+      (inventoryRows || [])
+        .filter(item => String(item.status).toLowerCase() === 'available')
+        .map(item => String(item.id))
+    );
+
+    const staleIds = productIds.filter(id => !availableIds.has(id));
+
+    if(staleIds.length){
+      const { error: cleanupError } = await supabaseClient
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id)
+        .in('product_id', staleIds);
+
+      if(cleanupError){
+        console.error('Could not clean sold/unavailable cart items:', cleanupError);
+      }
+    }
+
+    rows.forEach(row => {
+      const id = String(row.product_id);
+      if(availableIds.has(id) && Number(row.quantity) > 0){
+        cart[id] = 1;
+      }
     });
+
     renderCartBadge();
   }
 
@@ -678,7 +725,7 @@
     if(cartUserId !== user.id) await loadCartForUser(user);
     const next = 1;
     if(await saveCartItem(pendingId,next)){
-      cart[pendingId] = next;
+      cart[pendingId] = 1;
       renderCartBadge();
       renderCartDrawer();
       history.replaceState({}, document.title, location.pathname);
