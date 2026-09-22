@@ -18,25 +18,32 @@
   const authBtn = document.getElementById('authBtn');
   const roleNavBtn = document.getElementById('roleNavBtn');
 
-  // Buyer-only controls must not be available to a Shop Owner.
-  // Keep the buyer controls unchanged for normal buyer accounts.
-  function setShopOwnerBuyerControls(isShopOwner) {
+  function isOrdersControl(el) {
+    const label = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const href = (el.getAttribute('href') || '').toLowerCase();
+    const id = (el.id || '').toLowerCase();
+    const cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+    return label === 'my orders' || label === 'orders' || label.includes('my orders') ||
+      href.includes('my-orders') || href.includes('orders.html') ||
+      id.includes('orders') || cls.includes('orders');
+  }
+
+  // Buyers get Cart + My Orders. Shop Owners only browse/manage.
+  // Guests can browse, but My Orders is hidden until a buyer signs in.
+  function setAccountControls({ isShopOwner = false, isBuyer = false } = {}) {
     const cartBtn = document.getElementById('cartBtn');
-    if (cartBtn) {
-      cartBtn.style.display = isShopOwner ? 'none' : '';
-    }
+    if (cartBtn) cartBtn.style.display = isShopOwner ? 'none' : '';
 
-    // My Orders may be rendered by the page markup or another account module,
-    // so remove/hide it by its visible label as well as common order links.
     document.querySelectorAll('button, a').forEach((el) => {
-      const label = (el.textContent || '').trim().replace(/\s+/g, ' ').toLowerCase();
-      const href = (el.getAttribute('href') || '').toLowerCase();
-      const isMyOrders = label === 'my orders' || href.includes('my-orders') || href.includes('orders.html');
-
-      if (isMyOrders) {
-        el.style.display = isShopOwner ? 'none' : '';
-      }
+      if (isOrdersControl(el)) el.style.display = isBuyer ? '' : 'none';
     });
+
+    // Buyer-oriented category shortcuts on Home.
+    document.querySelectorAll('.chip-row').forEach((el) => {
+      el.style.display = isShopOwner ? 'none' : '';
+    });
+
+    document.body.dataset.accountRole = isShopOwner ? 'shop_owner' : (isBuyer ? 'buyer' : 'guest');
   }
 
   async function refreshAuthUI() {
@@ -53,45 +60,40 @@
         location.href = 'index.html';
       };
 
+      let profile = null;
       if (roleNavBtn) {
-        const { data: profile } = await supabaseClient
+        const { data } = await supabaseClient
           .from('profiles')
           .select('role')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+        profile = data;
+      }
 
-        if (profile?.role === 'shop_owner') {
-          roleNavBtn.textContent = 'Shop owner';
-          roleNavBtn.style.display = 'inline-flex';
-          roleNavBtn.onclick = () => location.href = 'shop-owner.html';
-          setShopOwnerBuyerControls(true);
-        } else {
-          roleNavBtn.textContent = '';
-          roleNavBtn.style.display = 'none';
-          setShopOwnerBuyerControls(false);
-        }
+      if (profile?.role === 'shop_owner') {
+        roleNavBtn.textContent = 'Shop owner';
+        roleNavBtn.style.display = 'inline-flex';
+        roleNavBtn.onclick = () => location.href = 'shop-owner.html';
+        setAccountControls({ isShopOwner: true, isBuyer: false });
       } else {
-        setShopOwnerBuyerControls(false);
+        roleNavBtn.textContent = '';
+        roleNavBtn.style.display = 'none';
+        setAccountControls({ isShopOwner: false, isBuyer: true });
       }
     } else {
       authBtn.textContent = 'Login';
       authBtn.classList.remove('signed-in');
-      authBtn.onclick = () => {
-        location.href = 'login.html';
-      };
+      authBtn.onclick = () => { location.href = 'login.html'; };
 
       if (roleNavBtn) {
         roleNavBtn.textContent = '';
         roleNavBtn.style.display = 'none';
       }
-      setShopOwnerBuyerControls(false);
+
+      setAccountControls({ isShopOwner: false, isBuyer: false });
     }
   }
 
-  window.datihanAuth = {
-    supabaseClient,
-    refreshAuthUI
-  };
-
+  window.datihanAuth = { supabaseClient, refreshAuthUI };
   refreshAuthUI();
 })();
