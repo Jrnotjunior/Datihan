@@ -138,3 +138,21 @@
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPhase9Navigation, {once:true});
   else initPhase9Navigation();
 })();
+
+// ---------------- PHASE 10 BUYER PHOTO GALLERY ----------------
+// Load the gallery after the main shop and realtime scripts without changing
+// the existing cart, checkout, or inventory rendering code.
+(function(){
+  function loadGallery(){
+    if(document.getElementById('datihanGalleryScript')) return;
+    const path = (location.pathname || '').toLowerCase();
+    if(!(path.endsWith('/index.html') || path === '/' || path.endsWith('/'))) return;
+    const script = document.createElement('script');
+    script.id = 'datihanGalleryScript';
+    script.src = 'js/gallery.js';
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadGallery, {once:true});
+  else loadGallery();
+})();
