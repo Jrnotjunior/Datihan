@@ -8,12 +8,10 @@ function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&l
 function msg(t,e=false){$('message').textContent=t;$('message').className='message show'+(e?' error':'');}
 function clearMsg(){$('message').className='message';$('message').textContent='';}
 async function checkStaff(){const {data:{user},error:ue}=await db.auth.getUser();if(ue||!user){location.href='login.html';return null;}const {data:profile,error:pe}=await db.from('profiles').select('role').eq('id',user.id).single();if(pe){msg('Could not verify account role: '+pe.message,true);return null;}if(!['shop_owner','admin'].includes(profile?.role)){location.href='index.html';return null;}return user;}
-async function diagnoseStaffFunction(){const {data,error}=await db.rpc('is_datihan_staff');if(error){msg('STAFF FUNCTION ERROR: '+error.message,true);return false;}msg(`STAFF FUNCTION RESULT: ${String(data)} | Browser user authenticated successfully.`);return Boolean(data);}
 async function load(){clearMsg();const user=await checkStaff();if(!user)return;$('body').innerHTML='<tr><td colspan="6" class="empty">Loading orders...</td></tr>';
- await diagnoseStaffFunction();
- const {data:orders,error}=await db.from('orders').select('id,buyer_id,inventory_id,status,created_at').order('created_at',{ascending:false});
+ const {data:orders,error}=await db.rpc('get_staff_orders');
  if(error){msg('Could not load orders: '+error.message,true);rows=[];render();return;}
- rows=orders||[];inventoryMap={};
+ rows=(orders||[]).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));inventoryMap={};
  const ids=[...new Set(rows.map(o=>o.inventory_id).filter(v=>v!==null&&v!==undefined))];
  if(ids.length){const {data:items,error:ie}=await db.from('inventory').select('id,item_code,name,price,image_url').in('id',ids);if(ie){msg('Orders loaded, but item details could not be loaded: '+ie.message,true);}else{(items||[]).forEach(i=>inventoryMap[String(i.id)]=i);}}
  render();
