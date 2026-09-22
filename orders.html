@@ -13,14 +13,57 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const URL='https://kymtqzyatofclfaeegfw.supabase.co';const KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';const db=window.supabase.createClient(URL,KEY);const $=id=>document.getElementById(id);
-function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const URL='https://kymtqzyatofclfaeegfw.supabase.co';
+const KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
+const db=window.supabase.createClient(URL,KEY);
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));}
 function msg(t,error=false){$('message').textContent=t;$('message').className='message show'+(error?' error':'');}
-function statusClass(s){return ['pending','confirmed','completed','cancelled'].includes(String(s).toLowerCase())?String(s).toLowerCase():'pending';}
-async function load(){const {data:{user}}=await db.auth.getUser();if(!user){location.href='login.html';return;}const {data,error}=await db.from('orders').select('id,buyer_id,inventory_id,status,created_at,inventory:inventory_id(id,item_code,name,price,image_url,image_urls)').eq('buyer_id',user.id).order('created_at',{ascending:false});if(error){console.error(error);msg('Could not load your orders: '+error.message,true);return;}render(data||[]);}
-function render(rows){if(!rows.length){$('orders').innerHTML='<div class="empty">You have no orders yet.</div>';return;}$('orders').innerHTML=rows.map(o=>{const p=o.inventory||{};const image=p.image_url||(Array.isArray(p.image_urls)?p.image_urls[0]:'');return `<article class="order"><div class="order-head"><div><div class="order-id">ORDER #${esc(o.id)}</div><div class="date">${new Date(o.created_at).toLocaleString()}</div></div><span class="status ${statusClass(o.status)}">${esc(o.status)}</span></div><div class="item">${image?`<img src="${esc(image)}" alt="">`:''}<div><h2>${esc(p.name||'Item')}</h2><div class="meta">Code: ${esc(p.item_code||p.id||o.inventory_id)}</div><div class="price">₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></article>`}).join('');}
-window.addEventListener('datihan:realtime',e=>{if(e.detail?.table==='orders'||e.detail?.table==='inventory')load();});
-$('storeBtn').onclick=()=>location.href='index.html';$('signOutBtn').onclick=async()=>{await db.auth.signOut();location.href='login.html'};load();
+function statusClass(s){const v=String(s||'pending').toLowerCase();return ['pending','confirmed','completed','cancelled'].includes(v)?v:'pending';}
+async function load(){
+  try{
+    const {data:{user},error:userError}=await db.auth.getUser();
+    if(userError) throw userError;
+    if(!user){location.href='login.html';return;}
+
+    // Fetch orders first. We intentionally avoid a nested Supabase relation here
+    // because the inventory foreign-key relationship can differ between projects.
+    const {data:orders,error:ordersError}=await db.from('orders')
+      .select('id,buyer_id,inventory_id,status,created_at')
+      .eq('buyer_id',user.id)
+      .order('created_at',{ascending:false});
+    if(ordersError) throw ordersError;
+
+    if(!orders||!orders.length){render([]);return;}
+
+    const ids=[...new Set(orders.map(o=>o.inventory_id).filter(v=>v!==null&&v!==undefined))];
+    let inventory=[];
+    if(ids.length){
+      const {data:items,error:inventoryError}=await db.from('inventory')
+        .select('id,item_code,name,price,image_url,image_urls,status')
+        .in('id',ids);
+      if(inventoryError) throw inventoryError;
+      inventory=items||[];
+    }
+    const byId=new Map(inventory.map(item=>[String(item.id),item]));
+    render(orders.map(o=>({...o,inventory:byId.get(String(o.inventory_id))||null})));
+  }catch(error){
+    console.error('My Orders load error:',error);
+    msg('Could not load your orders: '+(error?.message||error),true);
+  }
+}
+function render(rows){
+  if(!rows.length){$('orders').innerHTML='<div class="empty">You have no orders yet.</div>';return;}
+  $('orders').innerHTML=rows.map(o=>{
+    const p=o.inventory||{};
+    const image=p.image_url||(Array.isArray(p.image_urls)?p.image_urls[0]:'');
+    return `<article class="order"><div class="order-head"><div><div class="order-id">ORDER #${esc(o.id)}</div><div class="date">${new Date(o.created_at).toLocaleString()}</div></div><span class="status ${statusClass(o.status)}">${esc(o.status||'pending')}</span></div><div class="item">${image?`<img src="${esc(image)}" alt="">`:''}<div><h2>${esc(p.name||'Item')}</h2><div class="meta">Code: ${esc(p.item_code||p.id||o.inventory_id)}</div><div class="price">₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></article>`;
+  }).join('');
+}
+$('storeBtn').onclick=()=>location.href='index.html';
+$('signOutBtn').onclick=async()=>{await db.auth.signOut();location.href='login.html'};
+load();
 const ch=db.channel('buyer-orders-page').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load()).subscribe();
-</script><script src="js/realtime-sync.js"></script>
+</script>
+<script src="js/realtime-sync.js"></script>
 </body></html>
