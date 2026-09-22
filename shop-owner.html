@@ -76,6 +76,7 @@ tbody tr:last-child td{border-bottom:0}
     <button class="primary" id="addBtn">+ Add Item</button>
     <button class="secondary" id="refreshBtn">Refresh</button>
     <button class="secondary" id="storeBtn">View Store</button>
+    <button class="secondary" id="adminDashboardBtn" style="display:none">Admin Dashboard</button>
     <button class="signout" id="signOutBtn">Sign Out</button>
   </div>
 </section>
@@ -107,7 +108,6 @@ tbody tr:last-child td{border-bottom:0}
 <thead><tr><th>Item</th><th>Code</th><th>Category</th><th>Size</th><th>Condition</th><th>Price</th><th>Status</th><th>Consignor</th><th>Actions</th></tr></thead>
 <tbody id="inventoryBody"></tbody>
 </table>
-</div>
 </div>
 </section>
 
@@ -374,6 +374,7 @@ els.itemForm.onsubmit=saveItem;
 els.modalBackdrop.onclick=e=>{if(e.target.id==='modalBackdrop')closeModal()};
 
 $('storeBtn').onclick=()=>location.href='index.html';
+$('adminDashboardBtn').onclick=()=>location.href='admin.html';
 $('navStore').onclick=()=>location.href='index.html';
 $('navInventory').onclick=()=>showPanel('inventory');
 $('navPopups').onclick=()=>showPanel('popups');
@@ -501,6 +502,11 @@ $('modalTitle').addEventListener('pointercancel',()=>dragging=false);
     if(!['shop_owner','admin'].includes(profile?.role)){
       location.href='index.html';
       return;
+    }
+
+    // Only Admin accounts can see the shortcut back to Admin Dashboard.
+    if(profile.role === 'admin'){
+      $('adminDashboardBtn').style.display='inline-block';
     }
 
     await loadInventory();
