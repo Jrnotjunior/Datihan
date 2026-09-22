@@ -1211,11 +1211,11 @@
     // enters the public store (index.html). Buyers do not see this button.
     const role = profile?.role || 'buyer';
     if(role === 'admin'){
-      roleNavBtn.textContent = '← Admin Dashboard';
+      roleNavBtn.textContent = 'Admin Dashboard';
       roleNavBtn.classList.add('show');
       roleNavBtn.onclick = () => { location.href = 'admin.html'; };
     }else if(role === 'shop_owner'){
-      roleNavBtn.textContent = '← Shop Owner';
+      roleNavBtn.textContent = 'Shop Owner Dashboard';
       roleNavBtn.classList.add('show');
       roleNavBtn.onclick = () => { location.href = 'shop-owner.html'; };
     }else{
