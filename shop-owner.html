@@ -62,71 +62,9 @@ tbody tr:last-child td{border-bottom:0}
 @media(max-width:900px){.hero h1{font-size:44px}.stats{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.topbar{padding:0 18px}.container{padding:20px 12px 50px}.hero{align-items:flex-start;flex-direction:column}.hero h1{font-size:38px}.hero-actions{width:100%}.hero-actions button{flex:1}.stats{grid-template-columns:1fr 1fr;gap:10px}.toolbar{flex-wrap:wrap}.toolbar input{flex:1 1 100%}.item-count{margin-left:0}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.image-preview{grid-template-columns:repeat(2,1fr)}}
 
-.popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:20px 0 12px}.popup-list{display:block}.popup-table-wrap{background:#f8f8f5;border:1px solid var(--line);overflow:auto}.popup-table{width:100%;border-collapse:collapse;min-width:1050px}.popup-table th,.popup-table td{text-align:left;padding:14px 12px;border-bottom:1px solid #deded9;vertical-align:middle}.popup-table th{background:#f3f3ef;font-size:12px;letter-spacing:1px;text-transform:uppercase}.popup-table tbody tr:last-child td{border-bottom:0}.popup-title-cell{min-width:210px}.popup-title-cell strong{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:22px;line-height:1.05;margin-bottom:5px}.popup-title-cell span{font-size:12px;color:#555}.popup-location{min-width:150px}.popup-time{white-space:nowrap}.popup-status{display:inline-block;padding:5px 9px;border:1px solid;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-status.upcoming{background:#f0faf3;color:#067647;border-color:#a8d4b7}.popup-status.live{background:#fff8e8;color:#8a5a00;border-color:#d9bd77}.popup-status.completed{background:#eee;color:#666;border-color:#bbb}.popup-status.hidden{background:#eee;color:#777;border-color:#aaa}.popup-visibility{display:inline-block;padding:5px 9px;border:1px solid #a8d4b7;background:#f0faf3;color:#067647;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-visibility.hidden{border-color:#aaa;background:#eee;color:#777}.popup-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.popup-actions button{padding:8px 11px;font-size:12px}.popup-form textarea{min-height:100px}
-.popup-empty{padding:36px;text-align:center;color:#666;border:1px solid var(--line);background:#f8f8f5}
-/* Hover indicators */
-button:not(:disabled) {
-  transition: background-color .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
-}
+.popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0 12px}.popup-list{display:grid;gap:12px}.popup-card{background:#f8f8f5;border:1px solid var(--line);padding:18px;display:grid;grid-template-columns:1fr auto;gap:14px}.popup-card h3{margin:0 0 6px;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:25px}.popup-card p{margin:4px 0;color:#444}.popup-meta{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:#666;margin-top:10px}.popup-actions{display:flex;gap:7px;align-items:flex-start;flex-wrap:wrap}.toggle{font-size:11px;padding:7px 10px}.popup-status{display:inline-block;padding:4px 8px;border:1px solid #aaa;font-size:11px;font-weight:700}.popup-status.active{color:#067647;border-color:#a8d4b7;background:#f0faf3}.popup-status.inactive{color:#777;background:#eee}
+.popup-form textarea{min-height:100px}
 
-button:not(:disabled):hover {
-  background: #e7e5df;
-  border-color: #171717;
-  color: #171717;
-}
-
-button.primary:not(:disabled):hover {
-  background: #333333;
-  border-color: #333333;
-  color: #ffffff;
-}
-
-button.secondary:not(:disabled):hover {
-  background: #e2e0da;
-}
-
-button.danger:not(:disabled):hover {
-  background: #fff0ee;
-  border-color: #b42318;
-  color: #b42318;
-}
-
-button.success:not(:disabled):hover {
-  background: #075f3b;
-  border-color: #075f3b;
-  color: #ffffff;
-}
-
-button.signout:not(:disabled):hover {
-  background: #8f1c14;
-  border-color: #8f1c14;
-  color: #ffffff;
-}
-
-.admin-nav button:not(:disabled):hover {
-  background: #e7e5df;
-  color: #171717;
-}
-
-.admin-nav button.active:not(:disabled):hover {
-  background: #333333;
-  color: #ffffff;
-}
-
-tbody tr {
-  transition: background-color .15s ease;
-}
-
-tbody tr:hover {
-  background: #eeece6;
-}
-
-.actions button:not(:disabled):hover,
-.popup-actions button:not(:disabled):hover {
-  transform: translateY(-1px);
-}
-
-</style>
 </head>
 <body>
 <header class="topbar"><span class="dot"></span><span class="crumb">DATIHAN SHOP OWNER / INVENTORY & POP-UPS</span></header>
@@ -170,6 +108,7 @@ tbody tr:hover {
 <tbody id="inventoryBody"></tbody>
 </table>
 </div>
+</div>
 </section>
 
 <section id="popupsPanel" class="popup-panel">
@@ -178,26 +117,7 @@ tbody tr:hover {
     <button class="primary" id="addPopupBtn">+ Add Pop-Up</button>
   </div>
   <div id="popupMessage" class="message"></div>
-
-  <div class="stats">
-    <div class="card">Total Pop-Ups<div class="stat-value" id="totalPopups">0</div></div>
-    <div class="card">Active<div class="stat-value" id="activePopups">0</div></div>
-    <div class="card">Hidden<div class="stat-value" id="hiddenPopups">0</div></div>
-    <div class="card">Upcoming<div class="stat-value" id="upcomingPopups">0</div></div>
-  </div>
-
-  <div class="toolbar">
-    <input id="popupSearch" placeholder="Search title, message or location...">
-    <select id="popupStatusFilter"><option value="all">All status</option><option value="upcoming">Upcoming</option><option value="live">Live now</option><option value="completed">Completed</option><option value="hidden">Hidden</option></select>
-    <span class="item-count" id="popupCount">0 POP-UPS</span>
-  </div>
-
-  <div class="popup-table-wrap">
-    <table class="popup-table">
-      <thead><tr><th>Title</th><th>Location</th><th>Event Date</th><th>Time</th><th>Status</th><th>Visibility</th><th>Actions</th></tr></thead>
-      <tbody id="popupList"></tbody>
-    </table>
-  </div>
+  <div id="popupList" class="popup-list"></div>
 </section>
 
 <div class="modal-backdrop" id="modalBackdrop">
@@ -236,6 +156,8 @@ tbody tr:hover {
         <div class="field"><label>Event Date</label><input id="popupDate" type="date"></div>
         <div class="field"><label>Start Time</label><input id="popupStartTime" type="time"></div>
         <div class="field"><label>End Time</label><input id="popupEndTime" type="time"></div>
+        <div class="field"><label>Button Text</label><input id="popupButtonText" value="See details"></div>
+        <div class="field"><label>Button Destination</label><select id="popupButtonTab"><option value="events">Pop-Ups</option><option value="home">Home</option><option value="shop">Shop</option><option value="consign">Consign</option><option value="about">About</option></select></div>
         <div class="field full"><label><input id="popupActive" type="checkbox" checked> Show this pop-up to buyers</label></div>
       </div>
       <div class="modal-actions"><button type="button" class="secondary" id="popupCancelBtn">Cancel</button><button type="submit" class="primary" id="popupSaveBtn">Save Pop-Up</button></div>
@@ -445,8 +367,7 @@ let popups=[];
 let editingPopupId=null;
 const popupEls={
   panelInventory:$('inventoryPanel'),panelPopups:$('popupsPanel'),navInventory:$('navInventory'),navPopups:$('navPopups'),
-  list:$('popupList'),msg:$('popupMessage'),modal:$('popupModalBackdrop'),form:$('popupForm'),title:$('popupTitle'),message:$('popupMessageInput'),location:$('popupLocation'),date:$('popupDate'),startTime:$('popupStartTime'),endTime:$('popupEndTime'),active:$('popupActive'),save:$('popupSaveBtn'),modalTitle:$('popupModalTitle'),
-  search:$('popupSearch'),filter:$('popupStatusFilter'),count:$('popupCount'),total:$('totalPopups'),activeCount:$('activePopups'),hidden:$('hiddenPopups'),upcoming:$('upcomingPopups')
+  list:$('popupList'),msg:$('popupMessage'),modal:$('popupModalBackdrop'),form:$('popupForm'),title:$('popupTitle'),message:$('popupMessageInput'),location:$('popupLocation'),date:$('popupDate'),startTime:$('popupStartTime'),endTime:$('popupEndTime'),buttonText:$('popupButtonText'),buttonTab:$('popupButtonTab'),active:$('popupActive'),save:$('popupSaveBtn'),modalTitle:$('popupModalTitle')
 };
 function showPanel(name){
   popupInventoryMode=name;
@@ -458,76 +379,26 @@ function showPanel(name){
   if(!inv) loadPopups();
 }
 function popupMessage(text,error=false){popupEls.msg.textContent=text;popupEls.msg.className='message show'+(error?' error':'');}
-function popupStatus(item){
-  if(!item.is_active)return 'hidden';
-  if(!item.event_date)return 'upcoming';
-  const start=item.event_date+'T'+(item.start_time?String(item.start_time).slice(0,8):'00:00:00');
-  const end=item.event_date+'T'+(item.end_time?String(item.end_time).slice(0,8):item.start_time?String(item.start_time).slice(0,8):'23:59:59');
-  const now=new Date(), startDate=new Date(start), endDate=new Date(end);
-  if(now<startDate)return 'upcoming';
-  if(now>endDate)return 'completed';
-  return 'live';
-}
-function formatPopupDate(v){return v?new Date(v+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'2-digit'}):'—';}
-function formatPopupTime(v){
-  if(!v)return '';
-  const [h,m]=String(v).slice(0,5).split(':').map(Number);
-  const d=new Date(2000,0,1,h,m);
-  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-}
-function popupTimeRange(p){
-  const a=formatPopupTime(p.start_time),b=formatPopupTime(p.end_time);
-  return a&&b?`${a} – ${b}`:a||b||'—';
-}
-function popupStatusLabel(status){return status==='live'?'LIVE NOW':status.toUpperCase();}
+function escapePopup(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
 async function loadPopups(){
   const {data,error}=await supabaseClient.from('popups').select('*').order('event_date',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
   if(error){popupMessage(error.message,true);return}
   popups=data||[];
-  popupEls.total.textContent=popups.length;
-  popupEls.activeCount.textContent=popups.filter(p=>p.is_active).length;
-  popupEls.hidden.textContent=popups.filter(p=>!p.is_active).length;
-  popupEls.upcoming.textContent=popups.filter(p=>popupStatus(p)==='upcoming').length;
-  renderPopups();
-}
-function renderPopups(){
-  const q=(popupEls.search.value||'').toLowerCase().trim(),f=popupEls.filter.value;
-  const list=popups.filter(p=>{
-    const status=popupStatus(p);
-    const hay=[p.title,p.message,p.location].map(v=>String(v||'').toLowerCase()).join(' ');
-    return (!q||hay.includes(q))&&(f==='all'||status===f);
-  });
-  popupEls.count.textContent=`${list.length} POP-UP${list.length===1?'':'S'}`;
-  if(!list.length){popupEls.list.innerHTML='<tr><td colspan="7" class="empty">No pop-ups found.</td></tr>';return;}
-  popupEls.list.innerHTML=list.map(p=>{
-    const status=popupStatus(p);
-    return `<tr>
-      <td class="popup-title-cell"><strong>${escapePopup(p.title)}</strong><span>${escapePopup(p.message)}</span></td>
-      <td class="popup-location">${escapePopup(p.location||'—')}</td>
-      <td>${formatPopupDate(p.event_date)}</td>
-      <td class="popup-time">${popupTimeRange(p)}</td>
-      <td><span class="popup-status ${status}">${popupStatusLabel(status)}</span></td>
-      <td><span class="popup-visibility ${p.is_active?'':'hidden'}">${p.is_active?'VISIBLE':'HIDDEN'}</span></td>
-      <td><div class="popup-actions"><button class="secondary" data-popup-action="edit" data-id="${p.id}">Edit</button><button class="secondary" data-popup-action="toggle" data-id="${p.id}">${p.is_active?'Hide':'Show'}</button><button class="danger" data-popup-action="delete" data-id="${p.id}">Remove</button></div></td>
-    </tr>`;
+  if(!popups.length){popupEls.list.innerHTML='<div class="empty">No pop-ups yet. Click + Add Pop-Up to create the first announcement.</div>';return;}
+  popupEls.list.innerHTML=popups.map(p=>{
+    const date=p.event_date?new Date(p.event_date+'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}):'No date';
+    const time=[p.start_time,p.end_time].filter(Boolean).map(t=>{const [h,m]=String(t).slice(0,5).split(':').map(Number); const d=new Date(2000,0,1,h,m); return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}).join(' – ');
+    const schedule=[date,time].filter(Boolean).join(' · ');
+    return `<article class="popup-card"><div><span class="popup-status ${p.is_active?'active':'inactive'}">${p.is_active?'VISIBLE TO BUYERS':'HIDDEN'}</span><h3>${escapePopup(p.title)}</h3><p>${escapePopup(p.message)}</p><div class="popup-meta">${escapePopup(p.location||'No location')} · ${escapePopup(schedule||'No schedule')}</div></div><div class="popup-actions"><button class="secondary" data-popup-action="edit" data-id="${p.id}">Edit</button><button class="secondary" data-popup-action="toggle" data-id="${p.id}">${p.is_active?'Hide':'Show'}</button><button class="danger" data-popup-action="delete" data-id="${p.id}">Remove</button></div></article>`;
   }).join('');
 }
 function openPopupModal(item=null){
   editingPopupId=item?.id||null;popupEls.modalTitle.textContent=item?'Edit Pop-Up / Alert':'Add Pop-Up / Alert';popupEls.save.textContent=item?'Save Changes':'Save Pop-Up';
-  popupEls.title.value=item?.title||'';popupEls.message.value=item?.message||'';popupEls.location.value=item?.location||'';popupEls.date.value=item?.event_date||'';popupEls.startTime.value=item?.start_time?String(item.start_time).slice(0,5):'';popupEls.endTime.value=item?.end_time?String(item.end_time).slice(0,5):'';popupEls.active.checked=item?.is_active!==false;popupEls.modal.classList.add('open');
+  popupEls.title.value=item?.title||'';popupEls.message.value=item?.message||'';popupEls.location.value=item?.location||'';popupEls.date.value=item?.event_date||'';popupEls.startTime.value=item?.start_time?String(item.start_time).slice(0,5):'';popupEls.endTime.value=item?.end_time?String(item.end_time).slice(0,5):'';popupEls.buttonText.value=item?.button_text||'See details';popupEls.buttonTab.value=item?.button_tab||'events';popupEls.active.checked=item?.is_active!==false;popupEls.modal.classList.add('open');
 }
 function closePopupModal(){popupEls.modal.classList.remove('open');editingPopupId=null;}
-popupEls.form.onsubmit=async e=>{
-  e.preventDefault();
-  if(popupEls.endTime.value&&popupEls.startTime.value&&popupEls.endTime.value<=popupEls.startTime.value){popupMessage('End time must be later than start time.',true);return;}
-  popupEls.save.disabled=true;
-  const payload={title:popupEls.title.value.trim(),message:popupEls.message.value.trim(),location:popupEls.location.value.trim()||null,event_date:popupEls.date.value||null,start_time:popupEls.startTime.value||null,end_time:popupEls.endTime.value||null,button_text:'SEE UPCOMING POP-UPS',button_tab:'events',is_active:popupEls.active.checked};
-  const wasEditing=!!editingPopupId;
-  let r;if(wasEditing)r=await supabaseClient.from('popups').update(payload).eq('id',editingPopupId);else r=await supabaseClient.from('popups').insert(payload);
-  popupEls.save.disabled=false;if(r.error){popupMessage(r.error.message,true);return;}closePopupModal();popupMessage(wasEditing?'Pop-up updated.':'Pop-up added.');await loadPopups();
-};
+popupEls.form.onsubmit=async e=>{e.preventDefault();if(popupEls.endTime.value&&popupEls.startTime.value&&popupEls.endTime.value<=popupEls.startTime.value){popupMessage('End time must be later than start time.',true);return;}popupEls.save.disabled=true;const payload={title:popupEls.title.value.trim(),message:popupEls.message.value.trim(),location:popupEls.location.value.trim()||null,event_date:popupEls.date.value||null,start_time:popupEls.startTime.value||null,end_time:popupEls.endTime.value||null,button_text:popupEls.buttonText.value.trim()||'See details',button_tab:popupEls.buttonTab.value,is_active:popupEls.active.checked};let r;if(editingPopupId)r=await supabaseClient.from('popups').update(payload).eq('id',editingPopupId);else r=await supabaseClient.from('popups').insert(payload);popupEls.save.disabled=false;if(r.error){popupMessage(r.error.message,true);return;}closePopupModal();popupMessage(editingPopupId?'Pop-up updated.':'Pop-up added.');await loadPopups();};
 popupEls.list.onclick=async e=>{const b=e.target.closest('[data-popup-action]');if(!b)return;const id=b.dataset.id;const item=popups.find(p=>String(p.id)===id);if(!item)return;const action=b.dataset.popupAction;if(action==='edit'){openPopupModal(item);return;}if(action==='toggle'){const {error}=await supabaseClient.from('popups').update({is_active:!item.is_active}).eq('id',id);if(error)popupMessage(error.message,true);else await loadPopups();return;}if(action==='delete'){if(!confirm(`Remove "${item.title}"?`))return;const {error}=await supabaseClient.from('popups').delete().eq('id',id);if(error)popupMessage(error.message,true);else{popupMessage('Pop-up removed.');await loadPopups();}}};
-popupEls.search.addEventListener('input',renderPopups);popupEls.filter.addEventListener('change',renderPopups);
 $('addPopupBtn').onclick=()=>openPopupModal();$('popupCancelBtn').onclick=closePopupModal;$('popupModalBackdrop').onclick=e=>{if(e.target.id==='popupModalBackdrop')closePopupModal()};
 
 let dragging=false,dragX=0,dragY=0,startL=0,startT=0;
@@ -550,10 +421,10 @@ $('modalTitle').addEventListener('pointercancel',()=>dragging=false);
   s.onload=async()=>{
     supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     const {data:{user}}=await supabaseClient.auth.getUser();
-    if(!user){location.href='login.html';return}
+    if(!user){location.href='index.html';return}
     const {data:profile,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
     if(error||!['shop_owner','admin'].includes(profile?.role)){
-      location.href=profile?.role==='admin'?'admin.html':'index.html';return;
+      location.href='index.html';return;
     }
     await loadInventory();
   };
