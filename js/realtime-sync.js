@@ -2,6 +2,7 @@
  * Keeps buyer, shop-owner, and admin screens synchronized with Supabase.
  * UI-specific rendering remains in each page; this bridge only emits a
  * normalized browser event and asks refresh-capable pages to update.
+ * Installed through the repository workflow so existing page code stays protected.
  */
 (function(){
   const URL = 'https://kymtqzyatofclfaeegfw.supabase.co';
