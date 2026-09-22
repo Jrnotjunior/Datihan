@@ -397,6 +397,7 @@ function showPanel(name){
   if(!inv) loadPopups();
 }
 function popupMessage(text,error=false){popupEls.msg.textContent=text;popupEls.msg.className='message show'+(error?' error':'');}
+function escapePopup(value){return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
 function popupStatus(item){
   if(!item.is_active)return 'hidden';
   if(!item.event_date)return 'upcoming';
