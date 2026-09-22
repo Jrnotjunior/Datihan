@@ -1,0 +1,61 @@
+name: Install Datihan Realtime Sync
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject realtime bridge into HTML pages and buyer JS
+        shell: python
+        run: |
+          from pathlib import Path
+
+          changed = False
+
+          # Load the bridge on every top-level HTML page.
+          for path in Path('.').glob('*.html'):
+              text = path.read_text(encoding='utf-8')
+              marker = '<script src="js/realtime-sync.js"></script>'
+              if marker not in text and '</body>' in text:
+                  text = text.replace('</body>', '  ' + marker + '\n</body>', 1)
+                  path.write_text(text, encoding='utf-8')
+                  changed = True
+
+          # Buyer main.js gets a page-local handler so its lexical functions
+          # (loadProducts/loadCartForUser/renderShopGrid/etc.) can be updated
+          # without exposing them globally.
+          main = Path('js/main.js')
+          if main.exists():
+              text = main.read_text(encoding='utf-8')
+              marker = '// DATIHAN REALTIME HANDLERS'
+              if marker not in text:
+                  text += '''\n\n// DATIHAN REALTIME HANDLERS\nwindow.addEventListener('datihan:realtime', async (event) => {\n  const table = event.detail && event.detail.table;\n  try {\n    if(table === 'inventory' && typeof loadProducts === 'function'){\n      await loadProducts();\n    }\n    if(table === 'popups' && typeof loadPopups === 'function'){\n      await loadPopups();\n    }\n    if(table === 'cart_items' && typeof loadCartForUser === 'function'){\n      const { data: { user } } = await supabaseClient.auth.getUser();\n      if(user){\n        await loadCartForUser(user);\n        renderCartBadge();\n        renderCartDrawer();\n        renderShopGrid();\n      }\n    }\n    if(table === 'orders' && typeof loadProducts === 'function'){\n      // Order changes can make inventory unavailable; recheck the shop.\n      await loadProducts();\n    }\n  } catch(error){\n    console.error('Datihan realtime UI update failed:', error);\n  }\n});\n'''
+                  main.write_text(text, encoding='utf-8')
+                  changed = True
+
+          if changed:
+              print('Realtime sync installed/updated.')
+          else:
+              print('Realtime sync already installed; nothing to change.')
+
+      - name: Commit realtime integration
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' js/main.js
+          git commit -m "Enable realtime UI synchronization"
+          git push
