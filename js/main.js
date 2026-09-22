@@ -347,113 +347,88 @@
         + '</div>';
     }).join('');
 
-    cartFoot.innerHTML = '<div class="subtotal-row"><span>Subtotal</span><span class="amt">'+peso(cartTotal())+'</span></div>'
-      + '<button class="btn btn-primary" style="width:100%;" id="goCheckout">Checkout · Cash on Delivery</button>';
-
-    cartBody.querySelectorAll('.cart-line').forEach(line => {
-      const id = line.dataset.id;
-      line.querySelectorAll('[data-step]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const delta = parseInt(btn.dataset.step, 10);
-          setQty(id, (cart[id]||0) + delta);
-          renderShopGrid();
-        });
+    cartBody.querySelectorAll('[data-step]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const line = btn.closest('.cart-line');
+        const id = line.dataset.id;
+        setQty(id, cart[id] + Number(btn.dataset.step));
       });
-      line.querySelector('[data-remove]').addEventListener('click', () => {
+    });
+    cartBody.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.closest('.cart-line').dataset.id;
         setQty(id, 0);
-        renderShopGrid();
       });
     });
 
-    const goCheckout = document.getElementById('goCheckout');
-    if(goCheckout){
-      goCheckout.addEventListener('click', async () => {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if(!user){
-          closeDrawers();
-          pendingCheckout=true;
-          showCheckoutAuthChoice();
-          return;
-        }
-        closeDrawers();
-        renderCheckoutForm();
-        openDrawer(checkoutDrawer);
-      });
-    }
+    cartFoot.innerHTML = `
+      <div class="cart-total"><span>Total</span><strong>${peso(cartTotal())}</strong></div>
+      <button class="btn btn-primary checkout-btn" id="checkoutBtn" type="button">Checkout</button>`;
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if(!user){
+        pendingCheckout=true;
+        showCheckoutAuthChoice();
+        return;
+      }
+      renderCheckoutForm();
+      openDrawer(checkoutDrawer);
+    });
   }
-
-  // ---------------- CHECKOUT ----------------
-  const checkoutBody = document.getElementById('checkoutBody');
-  const checkoutTitle = document.getElementById('checkoutTitle');
 
   function renderCheckoutForm(){
-    checkoutTitle.textContent = 'Checkout';
-    const ids = Object.keys(cart);
-    const lines = ids.map(id => {
-      const p = findProduct(id);
-      return p ? { name:p.name, qty:cart[id], amt:p.price*cart[id] } : null;
-    }).filter(Boolean);
-
-    checkoutBody.innerHTML =
-      '<div class="cod-note">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/></svg>'
-      + '<span>Cash on Delivery only for now — no online or bank payment yet. Pay when your order arrives or when you pick it up.</span>'
-      + '</div>'
-      + '<div class="subtotal-row"><span>Total</span><span class="amt">'+peso(cartTotal())+'</span></div>'
-      + '<form id="checkoutForm">'
-      +   '<div class="field"><label for="ckName">Full name</label><input id="ckName" required></div>'
-      +   '<div class="field"><label for="ckPhone">Phone number</label><input id="ckPhone" type="tel" required></div>'
-      +   '<div class="field"><label for="ckAddress">Delivery address or pickup preference</label><textarea id="ckAddress" required></textarea></div>'
-      +   '<div class="field"><label for="ckNotes">Notes (optional)</label><textarea id="ckNotes" placeholder="Preferred pop-up, size swap, etc."></textarea></div>'
-      +   '<button type="submit" class="btn btn-primary" style="width:100%;" '+(lines.length===0?'disabled':'')+'>Place order · Cash on Delivery</button>'
-      + '</form>';
-
-    document.getElementById('checkoutForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('ckName').value.trim();
-      const phone = document.getElementById('ckPhone').value.trim();
-      const address = document.getElementById('ckAddress').value.trim();
-      const notes = document.getElementById('ckNotes').value.trim();
-      placeOrder({ name, phone, address, notes, lines, total: cartTotal() });
+    checkoutDrawer.querySelector('.drawer-head h2').textContent = 'Checkout';
+    checkoutBody.innerHTML = `
+      <div class="checkout-summary">
+        <div class="tag-font">ORDER SUMMARY</div>
+        ${Object.entries(cart).map(([id,qty])=>{
+          const p=findProduct(id);
+          return p ? `<div class="checkout-line"><span>${escapeHtml(p.name)} × ${qty}</span><strong>${peso(p.price*qty)}</strong></div>` : '';
+        }).join('')}
+        <div class="checkout-total"><span>Total</span><strong>${peso(cartTotal())}</strong></div>
+      </div>
+      <form id="checkoutForm" class="checkout-form">
+        <div class="checkout-field"><label for="buyerName">Full name</label><input id="buyerName" required></div>
+        <div class="checkout-field"><label for="buyerPhone">Phone</label><input id="buyerPhone" required></div>
+        <div class="checkout-field"><label for="buyerAddress">Delivery address</label><textarea id="buyerAddress" rows="3" required></textarea></div>
+        <div class="checkout-field"><label for="buyerNote">Note (optional)</label><textarea id="buyerNote" rows="2"></textarea></div>
+        <button class="btn btn-primary" type="submit">Place order — COD</button>
+        <p class="checkout-message" id="checkoutMessage"></p>
+      </form>`;
+    const checkoutForm=document.getElementById('checkoutForm');
+    checkoutForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const user=(await supabaseClient.auth.getUser()).data.user;
+      if(!user){
+        pendingCheckout=true;
+        showCheckoutAuthChoice();
+        return;
+      }
+      const msg=document.getElementById('checkoutMessage');
+      const submit=checkoutForm.querySelector('button[type="submit"]');
+      submit.disabled=true;
+      msg.textContent='Placing your order…';
+      const payload={
+        user_id:user.id,
+        customer_name:document.getElementById('buyerName').value.trim(),
+        phone:document.getElementById('buyerPhone').value.trim(),
+        address:document.getElementById('buyerAddress').value.trim(),
+        note:document.getElementById('buyerNote').value.trim(),
+        total_amount:cartTotal(),
+        items:Object.entries(cart).map(([id,qty])=>({product_id:id,quantity:qty}))
+      };
+      const {error}=await supabaseClient.from('orders').insert(payload);
+      if(error){
+        msg.textContent=error.message||'Could not place the order.';
+        submit.disabled=false;
+        return;
+      }
+      msg.textContent='Order placed successfully. We will contact you to confirm delivery.';
+      cart={};
+      saveCart(cart);
+      renderCartBadge();
+      renderCartDrawer();
     });
-  }
-
-  function placeOrder(order){
-    const refId = 'DT-' + Math.floor(100000 + Math.random()*900000);
-    const summaryLines = order.lines.map(l => l.qty+'x '+l.name+' — '+peso(l.amt)).join('\n');
-    const summary =
-      'Datihan order '+refId+'\n'
-      + summaryLines + '\n'
-      + 'Total: '+peso(order.total)+'\n'
-      + 'Payment: Cash on Delivery\n\n'
-      + 'Name: '+order.name+'\n'
-      + 'Phone: '+order.phone+'\n'
-      + 'Address/pickup: '+order.address
-      + (order.notes ? ('\nNotes: '+order.notes) : '');
-
-    checkoutTitle.textContent = 'Order placed';
-    checkoutBody.innerHTML =
-      '<div class="confirm-box">'
-      + '<svg class="checkmark" viewBox="0 0 48 48" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="24" cy="24" r="21"/><path d="M15 24l6 6 12-13"/></svg>'
-      + '<div class="display" style="font-size:1.5rem;">Order received</div>'
-      + '<div class="refid">Ref '+refId+'</div>'
-      + '<div class="order-summary">'+summary+'</div>'
-      + '<p class="content-measure" style="margin:0 auto 18px; color:var(--ink-soft); font-size:.9rem;">Send us this summary on Instagram to confirm — we\'ll reply with pickup or delivery timing. Pay by cash when it arrives.</p>'
-      + '<div class="confirm-actions">'
-      +   '<button class="btn btn-outline" id="copyOrder">Copy order details</button>'
-      +   '<a class="btn btn-primary" href="https://www.instagram.com/datihan.ph" target="_blank" rel="noopener">Message us on Instagram</a>'
-      + '</div>'
-      + '</div>';
-
-    document.getElementById('copyOrder').addEventListener('click', () => {
-      navigator.clipboard.writeText(summary).then(() => {
-        document.getElementById('copyOrder').textContent = 'Copied!';
-      }).catch(() => {});
-    });
-
-    cart = {};
-    saveCart(cart);
-    renderCartBadge();
   }
 
   // ---------------- AUTHENTICATION UI ----------------
@@ -487,6 +462,20 @@
     }
   }
 
+  function goToLoginForCart(){
+    if(pendingAddToCartId){
+      localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
+    }
+    location.href = 'login.html';
+  }
+
+  function goToSignupForCart(){
+    if(pendingAddToCartId){
+      localStorage.setItem('datihan_pending_add_to_cart', String(pendingAddToCartId));
+    }
+    location.href = 'signup.html';
+  }
+
   function showAddToCartAuthChoice(){
     authTitle.textContent = 'Login required to add to cart';
     authBody.innerHTML = `
@@ -494,8 +483,8 @@
       <button class="btn btn-primary auth-submit" type="button" id="existingCartBuyerBtn">I already have an account</button>
       <button class="btn btn-outline auth-submit" type="button" id="newCartBuyerBtn" style="margin-top:10px;">I'm a new buyer — Sign Up</button>
       <p class="auth-message">You can browse the store without an account. An account is required to keep your cart connected to you.</p>`;
-    document.getElementById('existingCartBuyerBtn').addEventListener('click', () => showEmailStep('Sign in to your Datihan account to continue.'));
-    document.getElementById('newCartBuyerBtn').addEventListener('click', showSignupStep);
+    document.getElementById('existingCartBuyerBtn').addEventListener('click', goToLoginForCart);
+    document.getElementById('newCartBuyerBtn').addEventListener('click', goToSignupForCart);
     openAuth();
   }
 
@@ -548,7 +537,10 @@
   function openAuth(){
     authBackdrop.classList.add('open');
     authBackdrop.setAttribute('aria-hidden','false');
-    setTimeout(() => authEmail.focus(), 0);
+    setTimeout(() => {
+      const input = document.getElementById('authEmail');
+      if(input) input.focus();
+    }, 0);
   }
 
   function closeAuth(){
@@ -697,79 +689,37 @@
   }
 
   function escapeHtml(value){
-    return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    return String(value ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
   }
 
   async function refreshAuthUI(){
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if(!user){
-      authBtn.textContent = 'Login';
-      authBtn.classList.remove('logged-in');
-      authBtn.onclick = openAuth;
-      roleNavBtn.classList.remove('show');
-      roleNavBtn.textContent = '';
-      roleNavBtn.onclick = null;
-      return;
-    }
-
-    const { data: profile, error } = await supabaseClient
-      .from('profiles')
-      .select('full_name,email,role')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if(error){
-      console.error('Could not load profile:', error);
-    }
-
-    const name = profile?.full_name?.trim() || user.email || 'Account';
-    authBtn.textContent = name.length > 18 ? name.slice(0,18) + '…' : name;
-    authBtn.classList.add('logged-in');
-    authBtn.onclick = () => openAccountModal(profile, user);
-
-    // Keep a clear way back to the correct dashboard when an admin or shop owner
-    // enters the public store (index.html). Buyers do not see this button.
-    const role = profile?.role || 'buyer';
-    if(role === 'admin'){
-      roleNavBtn.textContent = '← Admin Dashboard';
-      roleNavBtn.classList.add('show');
-      roleNavBtn.onclick = () => { location.href = 'admin.html'; };
-    }else if(role === 'shop_owner'){
-      roleNavBtn.textContent = '← Shop Owner';
-      roleNavBtn.classList.add('show');
-      roleNavBtn.onclick = () => { location.href = 'shop-owner.html'; };
-    }else{
-      roleNavBtn.classList.remove('show');
-      roleNavBtn.textContent = '';
-      roleNavBtn.onclick = null;
-    }
-  }
-
-  function openAccountModal(profile, user){
-    authTitle.textContent = 'Your Datihan account';
-    authBody.innerHTML = `
-      <div class="auth-account">
-        <div class="role">${escapeHtml(profile?.role || 'buyer')}</div>
-        <div class="name">${escapeHtml(profile?.full_name || 'Welcome')}</div>
-        <div class="email">${escapeHtml(profile?.email || user.email || '')}</div>
-      </div>
-      <div style="margin-top:18px;">
-        <button class="btn btn-outline" style="width:100%;" id="signOutBtn">Sign out</button>
-      </div>`;
-    document.getElementById('signOutBtn').addEventListener('click', async () => {
-      const { error } = await supabaseClient.auth.signOut();
-      if(error){
-        alert(error.message);
-        return;
+    const {data:{user}} = await supabaseClient.auth.getUser();
+    if(user){
+      authBtn.textContent = user.email || 'Account';
+      authBtn.classList.add('signed-in');
+      authBtn.onclick = async () => {
+        await supabaseClient.auth.signOut();
+        location.href = 'index.html';
+      };
+      const {data:profile}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
+      if(profile?.role === 'shop_owner'){
+        roleNavBtn.textContent='Shop owner';
+        roleNavBtn.style.display='inline-flex';
+        roleNavBtn.onclick=()=>location.href='shop-owner.html';
+      }else{
+        roleNavBtn.textContent='';
+        roleNavBtn.style.display='none';
       }
-      closeAuth();
-      showEmailStep();
-      await refreshAuthUI();
-    });
-    openAuth();
+    }else{
+      authBtn.textContent='Login';
+      authBtn.classList.remove('signed-in');
+      authBtn.onclick=()=>{ location.href='login.html'; };
+      roleNavBtn.textContent='';
+      roleNavBtn.style.display='none';
+    }
   }
 
-  authBtn.addEventListener('click', openAuth);
+  authBtn.addEventListener('click', () => { location.href = 'login.html'; });
   authClose.addEventListener('click', closeAuth);
   authBackdrop.addEventListener('click', event => {
     if(event.target === authBackdrop) closeAuth();
@@ -778,14 +728,10 @@
     if(event.key === 'Escape' && authBackdrop.classList.contains('open')) closeAuth();
   });
 
-  // Supabase session changes keep the header account state in sync.
-  supabaseClient.auth.onAuthStateChange(() => {
-    refreshAuthUI();
-  });
-
   // ---------------- INIT ----------------
-  refreshAuthUI();
   renderCartBadge();
+  renderShopGrid();
+  refreshAuthUI();
   openCheckoutAfterLogin();
   loadProducts();
   loadPopups();
