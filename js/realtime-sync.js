@@ -35,11 +35,9 @@
       .subscribe();
   });
 
-  // Generic fallback for dashboard pages that expose a Refresh button.
   window.addEventListener('datihan:realtime', event => {
     const table = event.detail && event.detail.table;
     if(!table) return;
-
     const refresh = document.getElementById('refreshBtn');
     if(refresh && !refresh.disabled && (table === 'inventory' || table === 'popups' || table === 'orders')){
       refresh.click();
@@ -93,4 +91,50 @@
   }else{
     initDrawer();
   }
+})();
+
+// ---------------- PHASE 9 NAVIGATION ----------------
+// Keep the existing pages untouched while exposing the new order pages.
+(function(){
+  function addLink(parent, text, href, className){
+    if(!parent || document.querySelector('[data-datihan-order-link]')) return;
+    const a = document.createElement('a');
+    a.href = href;
+    a.textContent = text;
+    a.dataset.datihanOrderLink = 'true';
+    a.className = className || '';
+    a.style.textDecoration = 'none';
+    a.style.display = 'inline-flex';
+    a.style.alignItems = 'center';
+    a.style.justifyContent = 'center';
+    a.style.cursor = 'pointer';
+    a.style.fontFamily = 'inherit';
+    a.style.fontWeight = '700';
+    a.style.padding = '9px 13px';
+    a.style.border = '1px solid #333';
+    a.style.background = '#f8f8f5';
+    a.style.color = '#171717';
+    parent.appendChild(a);
+  }
+
+  function initPhase9Navigation(){
+    const path = (location.pathname || '').toLowerCase();
+
+    if(path.endsWith('/shop-owner.html') || path.endsWith('shop-owner.html')){
+      const nav = document.querySelector('.admin-nav');
+      if(nav && !nav.querySelector('[data-datihan-order-link]')) addLink(nav, 'Orders', 'shop-orders.html');
+      return;
+    }
+
+    if(path.endsWith('/index.html') || path === '/' || path.endsWith('/')){
+      const cartCount = document.getElementById('cartCount');
+      const cartButton = cartCount?.closest('button');
+      if(cartButton && !document.querySelector('[data-datihan-order-link]')){
+        addLink(cartButton.parentElement, 'My Orders', 'orders.html');
+      }
+    }
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPhase9Navigation, {once:true});
+  else initPhase9Navigation();
 })();
