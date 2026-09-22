@@ -61,48 +61,38 @@ tbody tr:last-child td{border-bottom:0}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
 @media(max-width:900px){.hero h1{font-size:44px}.stats{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){.topbar{padding:0 18px}.container{padding:20px 12px 50px}.hero{align-items:flex-start;flex-direction:column}.hero h1{font-size:38px}.hero-actions{width:100%}.hero-actions button{flex:1}.stats{grid-template-columns:1fr 1fr;gap:10px}.toolbar{flex-wrap:wrap}.toolbar input{flex:1 1 100%}.item-count{margin-left:0}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.image-preview{grid-template-columns:repeat(2,1fr)}}
-
-.popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:20px 0 12px}.popup-list{display:block}.popup-table-wrap{background:#f8f8f5;border:1px solid var(--line);overflow:auto}.popup-table{width:100%;border-collapse:collapse;min-width:1050px}.popup-table th,.popup-table td{text-align:left;padding:14px 12px;border-bottom:1px solid #deded9;vertical-align:middle}.popup-table th{background:#f3f3ef;font-size:12px;letter-spacing:1px;text-transform:uppercase}.popup-table tbody tr:last-child td{border-bottom:0}.popup-title-cell{min-width:210px}.popup-title-cell strong{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:22px;line-height:1.05;margin-bottom:5px}.popup-title-cell span{font-size:12px;color:#555}.popup-location{min-width:150px}.popup-time{white-space:nowrap}.popup-status{display:inline-block;padding:5px 9px;border:1px solid;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-status.upcoming{background:#f0faf3;color:#067647;border-color:#a8d4b7}.popup-status.live{background:#fff8e8;color:#8a5a00;border-color:#d9bd77}.popup-status.completed{background:#eee;color:#666;border-color:#bbb}.popup-status.hidden{background:#eee;color:#777;border-color:#aaa}.popup-visibility{display:inline-block;padding:5px 9px;border:1px solid #a8d4b7;background:#f0faf3;color:#067647;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-visibility.hidden{border-color:#aaa;background:#eee;color:#777}.popup-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.popup-actions button{padding:8px 11px;font-size:12px}.popup-form textarea{min-height:100px}
-.popup-empty{padding:36px;text-align:center;color:#666;border:1px solid var(--line);background:#f8f8f5}
+.popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:20px 0 12px}.popup-list{display:block}.popup-table-wrap{background:#f8f8f5;border:1px solid var(--line);overflow:auto}.popup-table{width:100%;border-collapse:collapse;min-width:1050px}.popup-table th,.popup-table td{text-align:left;padding:14px 12px;border-bottom:1px solid #deded9;vertical-align:middle}.popup-table th{background:#f3f3ef;font-size:12px;letter-spacing:1px;text-transform:uppercase}.popup-table tbody tr:last-child td{border-bottom:0}.popup-title-cell{min-width:210px}.popup-title-cell strong{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:22px;line-height:1.05;margin-bottom:5px}.popup-title-cell span{font-size:12px;color:#555}.popup-location{min-width:150px}.popup-time{white-space:nowrap}.popup-status{display:inline-block;padding:5px 9px;border:1px solid;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-status.upcoming{background:#f0faf3;color:#067647;border-color:#a8d4b7}.popup-status.live{background:#fff8e8;color:#8a5a00;border-color:#d9bd77}.popup-status.completed{background:#eee;color:#666;border-color:#bbb}.popup-status.hidden{background:#eee;color:#777;border-color:#aaa}.popup-visibility{display:inline-block;padding:5px 9px;border:1px solid #a8d4b7;background:#f0faf3;color:#067647;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-visibility.hidden{border-color:#aaa;background:#eee;color:#777}.popup-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.popup-actions button{padding:8px 11px;font-size:12px}.popup-form textarea{min-height:100px}.popup-empty{padding:36px;text-align:center;color:#666;border:1px solid var(--line);background:#f8f8f5}
 </style>
 </head>
 <body>
 <header class="topbar"><span class="dot"></span><span class="crumb">DATIHAN SHOP OWNER / INVENTORY & POP-UPS</span></header>
-
 <div class="container">
 <section class="hero">
   <div><div class="eyebrow">DATIHAN THRIFT SHOP</div><h1>SHOP OWNER</h1></div>
   <div class="hero-actions">
     <button class="primary" id="addBtn">+ Add Item</button>
-    <button class="secondary" id="refreshBtn">Refresh</button>
     <button class="secondary" id="storeBtn">View Store</button>
     <button class="secondary" id="adminDashboardBtn" style="display:none">Admin Dashboard</button>
     <button class="signout" id="signOutBtn">Sign Out</button>
   </div>
 </section>
-
 <nav class="admin-nav" aria-label="Shop owner navigation">
   <button class="active" id="navInventory">Inventory</button>
   <button id="navPopups">Pop-Ups / Alerts</button>
-  <button id="navStore">View Store</button>
 </nav>
-
 <section id="inventoryPanel" class="popup-panel active">
 <div id="message" class="message"></div>
-
 <div class="stats">
   <div class="card">Total Items<div class="stat-value" id="totalItems">0</div></div>
   <div class="card">Available<div class="stat-value" id="availableItems">0</div></div>
   <div class="card">Sold<div class="stat-value" id="soldItems">0</div></div>
   <div class="card">Listed Value<div class="stat-value" id="listedValue">₱0.00</div></div>
 </div>
-
 <div class="toolbar">
   <input id="search" placeholder="Search item code or name...">
   <select id="statusFilter"><option value="all">All status</option><option value="available">Available</option><option value="sold">Sold</option></select>
   <span class="item-count" id="itemCount">0 ITEMS</span>
 </div>
-
 <div class="table-wrap">
 <table>
 <thead><tr><th>Item</th><th>Code</th><th>Category</th><th>Size</th><th>Condition</th><th>Price</th><th>Status</th><th>Consignor</th><th>Actions</th></tr></thead>
@@ -110,27 +100,23 @@ tbody tr:last-child td{border-bottom:0}
 </table>
 </div>
 </section>
-
 <section id="popupsPanel" class="popup-panel">
   <div class="popup-toolbar">
     <div><div class="eyebrow">CUSTOMER COMMUNICATION</div><h2 style="margin:0;font-family:Impact,Arial Narrow,Arial,sans-serif;font-size:34px">POP-UPS / ALERTS</h2></div>
     <button class="primary" id="addPopupBtn">+ Add Pop-Up</button>
   </div>
   <div id="popupMessage" class="message"></div>
-
   <div class="stats">
     <div class="card">Total Pop-Ups<div class="stat-value" id="totalPopups">0</div></div>
     <div class="card">Active<div class="stat-value" id="activePopups">0</div></div>
     <div class="card">Hidden<div class="stat-value" id="hiddenPopups">0</div></div>
     <div class="card">Upcoming<div class="stat-value" id="upcomingPopups">0</div></div>
   </div>
-
   <div class="toolbar">
     <input id="popupSearch" placeholder="Search title, message or location...">
     <select id="popupStatusFilter"><option value="all">All status</option><option value="upcoming">Upcoming</option><option value="live">Live now</option><option value="completed">Completed</option><option value="hidden">Hidden</option></select>
     <span class="item-count" id="popupCount">0 POP-UPS</span>
   </div>
-
   <div class="popup-table-wrap">
     <table class="popup-table">
       <thead><tr><th>Title</th><th>Location</th><th>Event Date</th><th>Time</th><th>Status</th><th>Visibility</th><th>Actions</th></tr></thead>
@@ -138,7 +124,6 @@ tbody tr:last-child td{border-bottom:0}
     </table>
   </div>
 </section>
-
 <div class="modal-backdrop" id="modalBackdrop">
 <div class="modal" id="itemModal">
 <h2 id="modalTitle">Add New Item</h2>
@@ -163,7 +148,6 @@ tbody tr:last-child td{border-bottom:0}
 </form>
 </div>
 </div>
-
 <div class="modal-backdrop" id="popupModalBackdrop">
   <div class="modal" id="popupModal">
     <h2 id="popupModalTitle">Add Pop-Up / Alert</h2>
@@ -181,340 +165,60 @@ tbody tr:last-child td{border-bottom:0}
     </form>
   </div>
 </div>
-
 <script>
 const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
 const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
 let supabaseClient,inventory=[],editingId=null,selectedNewFiles=[];
-
 const $=id=>document.getElementById(id);
-const els={
-message:$('message'),refreshBtn:$('refreshBtn'),addBtn:$('addBtn'),search:$('search'),statusFilter:$('statusFilter'),
-itemCount:$('itemCount'),inventoryBody:$('inventoryBody'),totalItems:$('totalItems'),availableItems:$('availableItems'),
-soldItems:$('soldItems'),listedValue:$('listedValue'),modalBackdrop:$('modalBackdrop'),modal:$('itemModal'),
-modalTitle:$('modalTitle'),itemForm:$('itemForm'),itemCode:$('itemCode'),itemName:$('itemName'),category:$('category'),
-size:$('size'),condition:$('condition'),price:$('price'),description:$('description'),imageFiles:$('imageFiles'),
-imagePreview:$('imagePreview'),consignorId:$('consignorId'),saveBtn:$('saveBtn'),cancelBtn:$('cancelBtn')
-};
-
-function showMessage(t,type='ok'){
-  els.message.textContent=t;els.message.className='message show '+type;
-  clearTimeout(showMessage.t);showMessage.t=setTimeout(()=>els.message.className='message',4000);
-}
+const els={message:$('message'),addBtn:$('addBtn'),search:$('search'),statusFilter:$('statusFilter'),itemCount:$('itemCount'),inventoryBody:$('inventoryBody'),totalItems:$('totalItems'),availableItems:$('availableItems'),soldItems:$('soldItems'),listedValue:$('listedValue'),modalBackdrop:$('modalBackdrop'),modal:$('itemModal'),modalTitle:$('modalTitle'),itemForm:$('itemForm'),itemCode:$('itemCode'),itemName:$('itemName'),category:$('category'),size:$('size'),condition:$('condition'),price:$('price'),description:$('description'),imageFiles:$('imageFiles'),imagePreview:$('imagePreview'),consignorId:$('consignorId'),saveBtn:$('saveBtn'),cancelBtn:$('cancelBtn')};
+function showMessage(t,type='ok'){els.message.textContent=t;els.message.className='message show '+type;clearTimeout(showMessage.t);showMessage.t=setTimeout(()=>els.message.className='message',4000)}
 function money(v){return '₱'+Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:2})}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 function escapePopup(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-
-function getItemImages(item){
-  if(Array.isArray(item?.image_urls)) return item.image_urls.filter(Boolean);
-  if(typeof item?.image_urls==='string'){
-    try{const p=JSON.parse(item.image_urls);if(Array.isArray(p))return p.filter(Boolean)}catch(e){}
-  }
-  return item?.image_url?[item.image_url]:[];
-}
-
-async function loadInventory(){
-  if(!supabaseClient)return;
-  const {data,error}=await supabaseClient.from('inventory').select('*').order('created_at',{ascending:false});
-  if(error){showMessage(error.message,'error');return}
-  inventory=data||[];render();
-}
-
-function render(){
-  const q=els.search.value.toLowerCase().trim(),f=els.statusFilter.value;
-  const list=inventory.filter(x=>(!q||(x.item_code||'').toLowerCase().includes(q)||(x.name||'').toLowerCase().includes(q))&&(f==='all'||x.status===f));
-  const a=inventory.filter(x=>x.status==='available');
-  els.totalItems.textContent=inventory.length;
-  els.availableItems.textContent=a.length;
-  els.soldItems.textContent=inventory.filter(x=>x.status==='sold').length;
-  els.listedValue.textContent=money(a.reduce((s,x)=>s+Number(x.price||0),0));
-  els.itemCount.textContent=`${list.length} ITEM${list.length===1?'':'S'}`;
-  els.inventoryBody.innerHTML=list.length?list.map(x=>{
-    const img=getItemImages(x)[0];
-    return `<tr>
-      <td><div class="item-cell">${img?`<img class="item-thumb" src="${esc(img)}" alt="">`:'<div class="item-thumb"></div>'}<span class="item-name">${esc(x.name)}</span></div></td>
-      <td>${esc(x.item_code)}</td><td>${esc(x.category)}</td><td>${esc(x.size)}</td><td>${esc(x.condition)}</td>
-      <td>${money(x.price)}</td><td><span class="status ${x.status}">${esc(x.status).toUpperCase()}</span></td>
-      <td>${esc(x.consignor_id||'—')}</td>
-      <td><div class="actions">
-        <button class="secondary" data-action="edit" data-id="${x.id}">Edit</button>
-        ${x.status==='available'?`<button class="success" data-action="sold" data-id="${x.id}">Mark sold</button>`:`<button class="secondary" data-action="available" data-id="${x.id}">Mark available</button>`}
-        <button class="danger" data-action="delete" data-id="${x.id}">Delete</button>
-      </div></td>
-    </tr>`;
-  }).join(''):`<tr><td colspan="9" class="empty">No inventory found.</td></tr>`;
-}
-
-function renderImagePreview(){
-  const existing=JSON.parse(els.imagePreview.dataset.existing||'[]');
-  let html=existing.map((u,i)=>`<div class="image-tile"><img src="${esc(u)}" alt="Item photo"><button type="button" class="remove-photo" data-photo-type="existing" data-index="${i}">Remove</button></div>`).join('');
-  selectedNewFiles.forEach((f,i)=>{
-    const url=URL.createObjectURL(f);
-    html+=`<div class="image-tile"><img src="${esc(url)}" alt="New item photo"><button type="button" class="remove-photo" data-photo-type="new" data-index="${i}">Remove</button></div>`;
-  });
-  els.imagePreview.innerHTML=html;
-}
-
-function centerModal(){
-  els.modal.style.left='50%';els.modal.style.top='50%';els.modal.style.transform='translate(-50%,-50%)';
-}
-function openModal(item=null){
-  editingId=item?.id||null;selectedNewFiles=[];
-  els.modalTitle.textContent=item?'Edit Item':'Add New Item';
-  els.saveBtn.textContent=item?'Save Changes':'Add Item';
-  els.itemCode.value=item?.item_code||'';els.itemName.value=item?.name||'';
-  els.category.value=item?.category||'';els.size.value=item?.size||'';
-  els.condition.value=item?.condition||'';els.price.value=item?.price??'';
-  els.description.value=item?.description||'';els.imageFiles.value='';
-  els.consignorId.value=item?.consignor_id||'';
-  const existing=getItemImages(item);
-  els.imagePreview.dataset.existing=JSON.stringify(existing);
-  els.imagePreview.dataset.original=JSON.stringify(existing);
-  renderImagePreview();els.modalBackdrop.classList.add('open');centerModal();
-}
+function getItemImages(item){if(Array.isArray(item?.image_urls))return item.image_urls.filter(Boolean);if(typeof item?.image_urls==='string'){try{const p=JSON.parse(item.image_urls);if(Array.isArray(p))return p.filter(Boolean)}catch(e){}}return item?.image_url?[item.image_url]:[]}
+async function loadInventory(){if(!supabaseClient)return;const {data,error}=await supabaseClient.from('inventory').select('*').order('created_at',{ascending:false});if(error){showMessage(error.message,'error');return}inventory=data||[];render()}
+function render(){const q=els.search.value.toLowerCase().trim(),f=els.statusFilter.value;const list=inventory.filter(x=>(!q||(x.item_code||'').toLowerCase().includes(q)||(x.name||'').toLowerCase().includes(q))&&(f==='all'||x.status===f));const a=inventory.filter(x=>x.status==='available');els.totalItems.textContent=inventory.length;els.availableItems.textContent=a.length;els.soldItems.textContent=inventory.filter(x=>x.status==='sold').length;els.listedValue.textContent=money(a.reduce((s,x)=>s+Number(x.price||0),0));els.itemCount.textContent=`${list.length} ITEM${list.length===1?'':'S'}`;els.inventoryBody.innerHTML=list.length?list.map(x=>{const img=getItemImages(x)[0];return `<tr><td><div class="item-cell">${img?`<img class="item-thumb" src="${esc(img)}" alt="">`:'<div class="item-thumb"></div>'}<span class="item-name">${esc(x.name)}</span></div></td><td>${esc(x.item_code)}</td><td>${esc(x.category)}</td><td>${esc(x.size)}</td><td>${esc(x.condition)}</td><td>${money(x.price)}</td><td><span class="status ${x.status}">${esc(x.status).toUpperCase()}</span></td><td>${esc(x.consignor_id||'—')}</td><td><div class="actions"><button class="secondary" data-action="edit" data-id="${x.id}">Edit</button>${x.status==='available'?`<button class="success" data-action="sold" data-id="${x.id}">Mark sold</button>`:`<button class="secondary" data-action="available" data-id="${x.id}">Mark available</button>`}<button class="danger" data-action="delete" data-id="${x.id}">Delete</button></div></td></tr>`}).join(''):`<tr><td colspan="9" class="empty">No inventory found.</td></tr>`}
+function renderImagePreview(){const existing=JSON.parse(els.imagePreview.dataset.existing||'[]');let html=existing.map((u,i)=>`<div class="image-tile"><img src="${esc(u)}" alt="Item photo"><button type="button" class="remove-photo" data-photo-type="existing" data-index="${i}">Remove</button></div>`).join('');selectedNewFiles.forEach((f,i)=>{const url=URL.createObjectURL(f);html+=`<div class="image-tile"><img src="${esc(url)}" alt="New item photo"><button type="button" class="remove-photo" data-photo-type="new" data-index="${i}">Remove</button></div>`});els.imagePreview.innerHTML=html}
+function centerModal(){els.modal.style.left='50%';els.modal.style.top='50%';els.modal.style.transform='translate(-50%,-50%)'}
+function openModal(item=null){editingId=item?.id||null;selectedNewFiles=[];els.modalTitle.textContent=item?'Edit Item':'Add New Item';els.saveBtn.textContent=item?'Save Changes':'Add Item';els.itemCode.value=item?.item_code||'';els.itemName.value=item?.name||'';els.category.value=item?.category||'';els.size.value=item?.size||'';els.condition.value=item?.condition||'';els.price.value=item?.price??'';els.description.value=item?.description||'';els.imageFiles.value='';els.consignorId.value=item?.consignor_id||'';const existing=getItemImages(item);els.imagePreview.dataset.existing=JSON.stringify(existing);els.imagePreview.dataset.original=JSON.stringify(existing);renderImagePreview();els.modalBackdrop.classList.add('open');centerModal()}
 function closeModal(){els.modalBackdrop.classList.remove('open');selectedNewFiles=[]}
-
-async function uploadImages(files,itemId){
-  const urls=[];
-  for(let i=0;i<files.length;i++){
-    const file=files[i],safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const path=`${itemId}/${Date.now()}-${i}-${safe}`;
-    const {error}=await supabaseClient.storage.from('inventory-images').upload(path,file,{upsert:false,contentType:file.type||undefined});
-    if(error)throw error;
-    urls.push(supabaseClient.storage.from('inventory-images').getPublicUrl(path).data.publicUrl);
-  }
-  return urls;
-}
-async function removeStoredImages(urls){
-  const marker='/storage/v1/object/public/inventory-images/';
-  const paths=urls.map(url=>{const i=String(url).indexOf(marker);return i>=0?decodeURIComponent(String(url).slice(i+marker.length)):null}).filter(Boolean);
-  if(paths.length)await supabaseClient.storage.from('inventory-images').remove(paths);
-}
-
-async function saveItem(e){
-  e.preventDefault();
-  const existing=JSON.parse(els.imagePreview.dataset.existing||'[]');
-  const original=JSON.parse(els.imagePreview.dataset.original||'[]');
-  const files=selectedNewFiles.slice();
-  if(existing.length+files.length>8)return showMessage('Maximum 8 photos allowed.','error');
-  if(existing.length+files.length<1)return showMessage('Please keep at least 1 photo.','error');
-
-  const p={
-    item_code:els.itemCode.value.trim(),name:els.itemName.value.trim(),
-    category:els.category.value.trim()||null,size:els.size.value.trim()||null,
-    condition:els.condition.value.trim()||null,price:Number(els.price.value),
-    description:els.description.value.trim()||null,consignor_id:els.consignorId.value.trim()||null
-  };
-  els.saveBtn.disabled=true;
-  try{
-    if(editingId){
-      let urls=existing.slice();
-      if(files.length)urls=urls.concat(await uploadImages(files,editingId));
-      p.image_urls=urls;p.image_url=urls[0];
-      const r=await supabaseClient.from('inventory').update(p).eq('id',editingId);
-      if(r.error)throw r.error;
-      const removed=original.filter(u=>!existing.includes(u));
-      if(removed.length)await removeStoredImages(removed);
-      showMessage('Item updated.');
-    }else{
-      const r=await supabaseClient.from('inventory').insert(p).select('id').single();
-      if(r.error)throw r.error;
-      const urls=await uploadImages(files,r.data.id);
-      const u=await supabaseClient.from('inventory').update({image_urls:urls,image_url:urls[0]}).eq('id',r.data.id);
-      if(u.error)throw u.error;
-      showMessage('Item added with photos.');
-    }
-    closeModal();await loadInventory();
-  }catch(err){console.error(err);showMessage('Could not save item: '+(err.message||err),'error')}
-  finally{els.saveBtn.disabled=false}
-}
-
-async function toggleSold(id,status){
-  const {data,error}=await supabaseClient.from('inventory').update({status,sold_at:status==='sold'?new Date().toISOString():null}).eq('id',id).select('*');
-  if(error){showMessage('Could not update status: '+error.message,'error');return}
-  if(!data||!data.length){showMessage('No item was updated. Check Supabase UPDATE permissions.','error');return}
-  showMessage(status==='sold'?'Item marked SOLD.':'Item marked AVAILABLE.');await loadInventory();
-}
-async function deleteItem(id){
-  const x=inventory.find(i=>i.id===id);
-  if(!confirm(`Delete "${x?.name||'this item'}"?`))return;
-  const {error}=await supabaseClient.from('inventory').delete().eq('id',id);
-  if(error){showMessage(error.message,'error');return}
-  showMessage('Item deleted.');await loadInventory();
-}
-
-els.inventoryBody.addEventListener('click',e=>{
-  const b=e.target.closest('button[data-action]');if(!b)return;
-  const item=inventory.find(x=>String(x.id)===String(b.dataset.id));
-  if(b.dataset.action==='edit')openModal(item);
-  if(b.dataset.action==='sold')toggleSold(b.dataset.id,'sold');
-  if(b.dataset.action==='available')toggleSold(b.dataset.id,'available');
-  if(b.dataset.action==='delete')deleteItem(b.dataset.id);
-});
-els.imagePreview.addEventListener('click',e=>{
-  const b=e.target.closest('button[data-photo-type]');if(!b)return;
-  const i=Number(b.dataset.index);
-  if(b.dataset.photoType==='existing'){
-    const existing=JSON.parse(els.imagePreview.dataset.existing||'[]');existing.splice(i,1);
-    els.imagePreview.dataset.existing=JSON.stringify(existing);
-  }else selectedNewFiles.splice(i,1);
-  renderImagePreview();
-});
-els.imageFiles.onchange=()=>{
-  const files=Array.from(els.imageFiles.files||[]),existing=JSON.parse(els.imagePreview.dataset.existing||'[]');
-  if(existing.length+selectedNewFiles.length+files.length>8){showMessage('Maximum 8 photos allowed.','error');els.imageFiles.value='';return}
-  selectedNewFiles=selectedNewFiles.concat(files);els.imageFiles.value='';renderImagePreview();
-};
-
-els.addBtn.onclick=()=>openModal();
-els.cancelBtn.onclick=closeModal;
-els.refreshBtn.onclick=loadInventory;
-els.search.oninput=render;
-els.statusFilter.onchange=render;
-els.itemForm.onsubmit=saveItem;
-els.modalBackdrop.onclick=e=>{if(e.target.id==='modalBackdrop')closeModal()};
-
+async function uploadImages(files,itemId){const urls=[];for(let i=0;i<files.length;i++){const file=files[i],safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=`${itemId}/${Date.now()}-${i}-${safe}`;const {error}=await supabaseClient.storage.from('inventory-images').upload(path,file,{upsert:false,contentType:file.type||undefined});if(error)throw error;urls.push(supabaseClient.storage.from('inventory-images').getPublicUrl(path).data.publicUrl)}return urls}
+async function removeStoredImages(urls){const marker='/storage/v1/object/public/inventory-images/';const paths=urls.map(url=>{const i=String(url).indexOf(marker);return i>=0?decodeURIComponent(String(url).slice(i+marker.length)):null}).filter(Boolean);if(paths.length)await supabaseClient.storage.from('inventory-images').remove(paths)}
+async function saveItem(e){e.preventDefault();const existing=JSON.parse(els.imagePreview.dataset.existing||'[]');const original=JSON.parse(els.imagePreview.dataset.original||'[]');const files=selectedNewFiles.slice();if(existing.length+files.length>8)return showMessage('Maximum 8 photos allowed.','error');if(existing.length+files.length<1)return showMessage('Please keep at least 1 photo.','error');const p={item_code:els.itemCode.value.trim(),name:els.itemName.value.trim(),category:els.category.value.trim()||null,size:els.size.value.trim()||null,condition:els.condition.value.trim()||null,price:Number(els.price.value),description:els.description.value.trim()||null,consignor_id:els.consignorId.value.trim()||null};els.saveBtn.disabled=true;try{if(editingId){let urls=existing.slice();if(files.length)urls=urls.concat(await uploadImages(files,editingId));p.image_urls=urls;p.image_url=urls[0];const r=await supabaseClient.from('inventory').update(p).eq('id',editingId);if(r.error)throw r.error;const removed=original.filter(u=>!existing.includes(u));if(removed.length)await removeStoredImages(removed);showMessage('Item updated.')}else{const r=await supabaseClient.from('inventory').insert(p).select('id').single();if(r.error)throw r.error;const urls=await uploadImages(files,r.data.id);const u=await supabaseClient.from('inventory').update({image_urls:urls,image_url:urls[0]}).eq('id',r.data.id);if(u.error)throw u.error;showMessage('Item added with photos.')}closeModal();await loadInventory()}catch(err){console.error(err);showMessage('Could not save item: '+(err.message||err),'error')}finally{els.saveBtn.disabled=false}}
+async function toggleSold(id,status){const {data,error}=await supabaseClient.from('inventory').update({status,sold_at:status==='sold'?new Date().toISOString():null}).eq('id',id).select('*');if(error){showMessage('Could not update status: '+error.message,'error');return}if(!data||!data.length){showMessage('No item was updated. Check Supabase UPDATE permissions.','error');return}showMessage(status==='sold'?'Item marked SOLD.':'Item marked AVAILABLE.');await loadInventory()}
+async function deleteItem(id){const x=inventory.find(i=>i.id===id);if(!confirm(`Delete "${x?.name||'this item'}"?`))return;const {error}=await supabaseClient.from('inventory').delete().eq('id',id);if(error){showMessage(error.message,'error');return}showMessage('Item deleted.');await loadInventory()}
+els.inventoryBody.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(!b)return;const item=inventory.find(x=>String(x.id)===String(b.dataset.id));if(b.dataset.action==='edit')openModal(item);if(b.dataset.action==='sold')toggleSold(b.dataset.id,'sold');if(b.dataset.action==='available')toggleSold(b.dataset.id,'available');if(b.dataset.action==='delete')deleteItem(b.dataset.id)})
+els.imagePreview.addEventListener('click',e=>{const b=e.target.closest('button[data-photo-type]');if(!b)return;const i=Number(b.dataset.index);if(b.dataset.photoType==='existing'){const existing=JSON.parse(els.imagePreview.dataset.existing||'[]');existing.splice(i,1);els.imagePreview.dataset.existing=JSON.stringify(existing)}else selectedNewFiles.splice(i,1);renderImagePreview()})
+els.imageFiles.onchange=()=>{const files=Array.from(els.imageFiles.files||[]),existing=JSON.parse(els.imagePreview.dataset.existing||'[]');if(existing.length+selectedNewFiles.length+files.length>8){showMessage('Maximum 8 photos allowed.','error');els.imageFiles.value='';return}selectedNewFiles=selectedNewFiles.concat(files);els.imageFiles.value='';renderImagePreview()}
+els.addBtn.onclick=()=>openModal();els.cancelBtn.onclick=closeModal;els.search.oninput=render;els.statusFilter.onchange=render;els.itemForm.onsubmit=saveItem;els.modalBackdrop.onclick=e=>{if(e.target.id==='modalBackdrop')closeModal()};
 $('storeBtn').onclick=()=>location.href='index.html';
 $('adminDashboardBtn').onclick=()=>location.href='admin.html';
-$('navStore').onclick=()=>location.href='index.html';
 $('navInventory').onclick=()=>showPanel('inventory');
 $('navPopups').onclick=()=>showPanel('popups');
 $('signOutBtn').onclick=async()=>{await supabaseClient.auth.signOut();location.href='login.html'};
-
-let popupInventoryMode='inventory';
-let popups=[];
-let editingPopupId=null;
-const popupEls={
-  panelInventory:$('inventoryPanel'),panelPopups:$('popupsPanel'),navInventory:$('navInventory'),navPopups:$('navPopups'),
-  list:$('popupList'),msg:$('popupMessage'),modal:$('popupModalBackdrop'),form:$('popupForm'),title:$('popupTitle'),message:$('popupMessageInput'),location:$('popupLocation'),date:$('popupDate'),startTime:$('popupStartTime'),endTime:$('popupEndTime'),active:$('popupActive'),save:$('popupSaveBtn'),modalTitle:$('popupModalTitle'),
-  search:$('popupSearch'),filter:$('popupStatusFilter'),count:$('popupCount'),total:$('totalPopups'),activeCount:$('activePopups'),hidden:$('hiddenPopups'),upcoming:$('upcomingPopups')
-};
-function showPanel(name){
-  popupInventoryMode=name;
-  const inv=name==='inventory';
-  popupEls.panelInventory.classList.toggle('active',inv);
-  popupEls.panelPopups.classList.toggle('active',!inv);
-  popupEls.navInventory.classList.toggle('active',inv);
-  popupEls.navPopups.classList.toggle('active',!inv);
-  if(!inv) loadPopups();
-}
-function popupMessage(text,error=false){popupEls.msg.textContent=text;popupEls.msg.className='message show'+(error?' error':'');}
-function popupStatus(item){
-  if(!item.is_active)return 'hidden';
-  if(!item.event_date)return 'upcoming';
-  const start=item.event_date+'T'+(item.start_time?String(item.start_time).slice(0,8):'00:00:00');
-  const end=item.event_date+'T'+(item.end_time?String(item.end_time).slice(0,8):item.start_time?String(item.start_time).slice(0,8):'23:59:59');
-  const now=new Date(), startDate=new Date(start), endDate=new Date(end);
-  if(now<startDate)return 'upcoming';
-  if(now>endDate)return 'completed';
-  return 'live';
-}
-function formatPopupDate(v){return v?new Date(v+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'2-digit'}):'—';}
-function formatPopupTime(v){
-  if(!v)return '';
-  const [h,m]=String(v).slice(0,5).split(':').map(Number);
-  const d=new Date(2000,0,1,h,m);
-  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-}
-function popupTimeRange(p){
-  const a=formatPopupTime(p.start_time),b=formatPopupTime(p.end_time);
-  return a&&b?`${a} – ${b}`:a||b||'—';
-}
-function popupStatusLabel(status){return status==='live'?'LIVE NOW':status.toUpperCase();}
-async function loadPopups(){
-  const {data,error}=await supabaseClient.from('popups').select('*').order('event_date',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
-  if(error){popupMessage(error.message,true);return}
-  popups=data||[];
-  popupEls.total.textContent=popups.length;
-  popupEls.activeCount.textContent=popups.filter(p=>p.is_active).length;
-  popupEls.hidden.textContent=popups.filter(p=>!p.is_active).length;
-  popupEls.upcoming.textContent=popups.filter(p=>popupStatus(p)==='upcoming').length;
-  renderPopups();
-}
-function renderPopups(){
-  const q=(popupEls.search.value||'').toLowerCase().trim(),f=popupEls.filter.value;
-  const list=popups.filter(p=>{
-    const status=popupStatus(p);
-    const hay=[p.title,p.message,p.location].map(v=>String(v||'').toLowerCase()).join(' ');
-    return (!q||hay.includes(q))&&(f==='all'||status===f);
-  });
-  popupEls.count.textContent=`${list.length} POP-UP${list.length===1?'':'S'}`;
-  if(!list.length){popupEls.list.innerHTML='<tr><td colspan="7" class="empty">No pop-ups found.</td></tr>';return;}
-  popupEls.list.innerHTML=list.map(p=>{
-    const status=popupStatus(p);
-    return `<tr>
-      <td class="popup-title-cell"><strong>${escapePopup(p.title)}</strong><span>${escapePopup(p.message)}</span></td>
-      <td class="popup-location">${escapePopup(p.location||'—')}</td>
-      <td>${formatPopupDate(p.event_date)}</td>
-      <td class="popup-time">${popupTimeRange(p)}</td>
-      <td><span class="popup-status ${status}">${popupStatusLabel(status)}</span></td>
-      <td><span class="popup-visibility ${p.is_active?'':'hidden'}">${p.is_active?'VISIBLE':'HIDDEN'}</span></td>
-      <td><div class="popup-actions"><button class="secondary" data-popup-action="edit" data-id="${p.id}">Edit</button><button class="secondary" data-popup-action="toggle" data-id="${p.id}">${p.is_active?'Hide':'Show'}</button><button class="danger" data-popup-action="delete" data-id="${p.id}">Remove</button></div></td>
-    </tr>`;
-  }).join('');
-}
-function openPopupModal(item=null){
-  editingPopupId=item?.id||null;popupEls.modalTitle.textContent=item?'Edit Pop-Up / Alert':'Add Pop-Up / Alert';popupEls.save.textContent=item?'Save Changes':'Save Pop-Up';
-  popupEls.title.value=item?.title||'';popupEls.message.value=item?.message||'';popupEls.location.value=item?.location||'';popupEls.date.value=item?.event_date||'';popupEls.startTime.value=item?.start_time?String(item.start_time).slice(0,5):'';popupEls.endTime.value=item?.end_time?String(item.end_time).slice(0,5):'';popupEls.active.checked=item?.is_active!==false;popupEls.modal.classList.add('open');
-}
-function closePopupModal(){popupEls.modal.classList.remove('open');editingPopupId=null;}
-popupEls.form.onsubmit=async e=>{
-  e.preventDefault();
-  if(popupEls.endTime.value&&popupEls.startTime.value&&popupEls.endTime.value<=popupEls.startTime.value){popupMessage('End time must be later than start time.',true);return;}
-  popupEls.save.disabled=true;
-  const payload={title:popupEls.title.value.trim(),message:popupEls.message.value.trim(),location:popupEls.location.value.trim()||null,event_date:popupEls.date.value||null,start_time:popupEls.startTime.value||null,end_time:popupEls.endTime.value||null,button_text:'SEE UPCOMING POP-UPS',button_tab:'events',is_active:popupEls.active.checked};
-  const wasEditing=!!editingPopupId;
-  let r;if(wasEditing)r=await supabaseClient.from('popups').update(payload).eq('id',editingPopupId);else r=await supabaseClient.from('popups').insert(payload);
-  popupEls.save.disabled=false;if(r.error){popupMessage(r.error.message,true);return;}closePopupModal();popupMessage(wasEditing?'Pop-up updated.':'Pop-up added.');await loadPopups();
-};
-popupEls.list.onclick=async e=>{const b=e.target.closest('[data-popup-action]');if(!b)return;const id=b.dataset.id;const item=popups.find(p=>String(p.id)===id);if(!item)return;const action=b.dataset.popupAction;if(action==='edit'){openPopupModal(item);return;}if(action==='toggle'){const {error}=await supabaseClient.from('popups').update({is_active:!item.is_active}).eq('id',id);if(error)popupMessage(error.message,true);else await loadPopups();return;}if(action==='delete'){if(!confirm(`Remove "${item.title}"?`))return;const {error}=await supabaseClient.from('popups').delete().eq('id',id);if(error)popupMessage(error.message,true);else{popupMessage('Pop-up removed.');await loadPopups();}}};
+let popupInventoryMode='inventory';let popups=[];let editingPopupId=null;
+const popupEls={panelInventory:$('inventoryPanel'),panelPopups:$('popupsPanel'),navInventory:$('navInventory'),navPopups:$('navPopups'),list:$('popupList'),msg:$('popupMessage'),modal:$('popupModalBackdrop'),form:$('popupForm'),title:$('popupTitle'),message:$('popupMessageInput'),location:$('popupLocation'),date:$('popupDate'),startTime:$('popupStartTime'),endTime:$('popupEndTime'),active:$('popupActive'),save:$('popupSaveBtn'),modalTitle:$('popupModalTitle'),search:$('popupSearch'),filter:$('popupStatusFilter'),count:$('popupCount'),total:$('totalPopups'),activeCount:$('activePopups'),hidden:$('hiddenPopups'),upcoming:$('upcomingPopups')};
+function showPanel(name){popupInventoryMode=name;const inv=name==='inventory';popupEls.panelInventory.classList.toggle('active',inv);popupEls.panelPopups.classList.toggle('active',!inv);popupEls.navInventory.classList.toggle('active',inv);popupEls.navPopups.classList.toggle('active',!inv);if(!inv)loadPopups()}
+function popupMessage(text,error=false){popupEls.msg.textContent=text;popupEls.msg.className='message show'+(error?' error':'')}
+function popupStatus(item){if(!item.is_active)return 'hidden';if(!item.event_date)return 'upcoming';const start=item.event_date+'T'+(item.start_time?String(item.start_time).slice(0,8):'00:00:00');const end=item.event_date+'T'+(item.end_time?String(item.end_time).slice(0,8):item.start_time?String(item.start_time).slice(0,8):'23:59:59');const now=new Date(),startDate=new Date(start),endDate=new Date(end);if(now<startDate)return 'upcoming';if(now>endDate)return 'completed';return 'live'}
+function formatPopupDate(v){return v?new Date(v+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'short',day:'2-digit'}):'—'}
+function formatPopupTime(v){if(!v)return '';const [h,m]=String(v).slice(0,5).split(':').map(Number);const d=new Date(2000,0,1,h,m);return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
+function popupTimeRange(p){const a=formatPopupTime(p.start_time),b=formatPopupTime(p.end_time);return a&&b?`${a} – ${b}`:a||b||'—'}
+function popupStatusLabel(status){return status==='live'?'LIVE NOW':status.toUpperCase()}
+async function loadPopups(){const {data,error}=await supabaseClient.from('popups').select('*').order('event_date',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});if(error){popupMessage(error.message,true);return}popups=data||[];popupEls.total.textContent=popups.length;popupEls.activeCount.textContent=popups.filter(p=>p.is_active).length;popupEls.hidden.textContent=popups.filter(p=>!p.is_active).length;popupEls.upcoming.textContent=popups.filter(p=>popupStatus(p)==='upcoming').length;renderPopups()}
+function renderPopups(){const q=(popupEls.search.value||'').toLowerCase().trim(),f=popupEls.filter.value;const list=popups.filter(p=>{const status=popupStatus(p);const hay=[p.title,p.message,p.location].map(v=>String(v||'').toLowerCase()).join(' ');return (!q||hay.includes(q))&&(f==='all'||status===f)});popupEls.count.textContent=`${list.length} POP-UP${list.length===1?'':'S'}`;if(!list.length){popupEls.list.innerHTML='<tr><td colspan="7" class="empty">No pop-ups found.</td></tr>';return}popupEls.list.innerHTML=list.map(p=>{const status=popupStatus(p);return `<tr><td class="popup-title-cell"><strong>${escapePopup(p.title)}</strong><span>${escapePopup(p.message)}</span></td><td class="popup-location">${escapePopup(p.location||'—')}</td><td>${formatPopupDate(p.event_date)}</td><td class="popup-time">${popupTimeRange(p)}</td><td><span class="popup-status ${status}">${popupStatusLabel(status)}</span></td><td><span class="popup-visibility ${p.is_active?'':'hidden'}">${p.is_active?'VISIBLE':'HIDDEN'}</span></td><td><div class="popup-actions"><button class="secondary" data-popup-action="edit" data-id="${p.id}">Edit</button><button class="secondary" data-popup-action="toggle" data-id="${p.id}">${p.is_active?'Hide':'Show'}</button><button class="danger" data-popup-action="delete" data-id="${p.id}">Remove</button></div></td></tr>`}).join('')}
+function openPopupModal(item=null){editingPopupId=item?.id||null;popupEls.modalTitle.textContent=item?'Edit Pop-Up / Alert':'Add Pop-Up / Alert';popupEls.save.textContent=item?'Save Changes':'Save Pop-Up';popupEls.title.value=item?.title||'';popupEls.message.value=item?.message||'';popupEls.location.value=item?.location||'';popupEls.date.value=item?.event_date||'';popupEls.startTime.value=item?.start_time?String(item.start_time).slice(0,5):'';popupEls.endTime.value=item?.end_time?String(item.end_time).slice(0,5):'';popupEls.active.checked=item?.is_active!==false;popupEls.modal.classList.add('open')}
+function closePopupModal(){popupEls.modal.classList.remove('open');editingPopupId=null}
+popupEls.form.onsubmit=async e=>{e.preventDefault();if(popupEls.endTime.value&&popupEls.startTime.value&&popupEls.endTime.value<=popupEls.startTime.value){popupMessage('End time must be later than start time.',true);return}popupEls.save.disabled=true;const payload={title:popupEls.title.value.trim(),message:popupEls.message.value.trim(),location:popupEls.location.value.trim()||null,event_date:popupEls.date.value||null,start_time:popupEls.startTime.value||null,end_time:popupEls.endTime.value||null,button_text:'SEE UPCOMING POP-UPS',button_tab:'events',is_active:popupEls.active.checked};const wasEditing=!!editingPopupId;let r;if(wasEditing)r=await supabaseClient.from('popups').update(payload).eq('id',editingPopupId);else r=await supabaseClient.from('popups').insert(payload);popupEls.save.disabled=false;if(r.error){popupMessage(r.error.message,true);return}closePopupModal();popupMessage(wasEditing?'Pop-up updated.':'Pop-up added.');await loadPopups()}
+popupEls.list.onclick=async e=>{const b=e.target.closest('[data-popup-action]');if(!b)return;const id=b.dataset.id;const item=popups.find(p=>String(p.id)===id);if(!item)return;const action=b.dataset.popupAction;if(action==='edit'){openPopupModal(item);return}if(action==='toggle'){const {error}=await supabaseClient.from('popups').update({is_active:!item.is_active}).eq('id',id);if(error)popupMessage(error.message,true);else await loadPopups();return}if(action==='delete'){if(!confirm(`Remove "${item.title}"?`))return;const {error}=await supabaseClient.from('popups').delete().eq('id',id);if(error)popupMessage(error.message,true);else{popupMessage('Pop-up removed.');await loadPopups()}}};
 popupEls.search.addEventListener('input',renderPopups);popupEls.filter.addEventListener('change',renderPopups);
 $('addPopupBtn').onclick=()=>openPopupModal();$('popupCancelBtn').onclick=closePopupModal;$('popupModalBackdrop').onclick=e=>{if(e.target.id==='popupModalBackdrop')closePopupModal()};
-
 let dragging=false,dragX=0,dragY=0,startL=0,startT=0;
-$('modalTitle').addEventListener('pointerdown',e=>{
-  dragging=true;const r=els.modal.getBoundingClientRect();dragX=e.clientX;dragY=e.clientY;startL=r.left;startT=r.top;
-  els.modal.style.transform='none';els.modal.setPointerCapture?.(e.pointerId);
-});
-$('modalTitle').addEventListener('pointermove',e=>{
-  if(!dragging)return;
-  const maxL=Math.max(0,innerWidth-els.modal.offsetWidth),maxT=Math.max(0,innerHeight-els.modal.offsetHeight);
-  els.modal.style.left=Math.min(maxL,Math.max(0,startL+e.clientX-dragX))+'px';
-  els.modal.style.top=Math.min(maxT,Math.max(0,startT+e.clientY-dragY))+'px';
-});
-$('modalTitle').addEventListener('pointerup',()=>dragging=false);
-$('modalTitle').addEventListener('pointercancel',()=>dragging=false);
-
-(async()=>{
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  s.onload=async()=>{
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data:{user}}=await supabaseClient.auth.getUser();
-    if(!user){location.href='login.html';return}
-    const {data:profile,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
-    if(error){
-      document.body.insertAdjacentHTML('afterbegin',
-        '<div style="position:fixed;inset:0;z-index:99999;background:#f4f4f0;color:#171717;display:grid;place-items:center;font-family:Courier New,monospace;padding:24px;text-align:center"><div><h2 style="font-family:Impact,Arial,sans-serif;font-size:32px;margin:0 0 12px">SHOP OWNER PAGE ERROR</h2><p>Unable to load your account role. Please refresh or sign in again.</p></div></div>');
-      console.error('Profile lookup failed:', error);
-      return;
-    }
-
-    if(!['shop_owner','admin'].includes(profile?.role)){
-      location.href='index.html';
-      return;
-    }
-
-    // Only Admin accounts can see the shortcut back to Admin Dashboard.
-    if(profile.role === 'admin'){
-      $('adminDashboardBtn').style.display='inline-block';
-    }
-
-    await loadInventory();
-  };
-  document.head.appendChild(s);
-})();
+$('modalTitle').addEventListener('pointerdown',e=>{dragging=true;const r=els.modal.getBoundingClientRect();dragX=e.clientX;dragY=e.clientY;startL=r.left;startT=r.top;els.modal.style.transform='none';els.modal.setPointerCapture?.(e.pointerId)});
+$('modalTitle').addEventListener('pointermove',e=>{if(!dragging)return;const maxL=Math.max(0,innerWidth-els.modal.offsetWidth),maxT=Math.max(0,innerHeight-els.modal.offsetHeight);els.modal.style.left=Math.min(maxL,Math.max(0,startL+e.clientX-dragX))+'px';els.modal.style.top=Math.min(maxT,Math.max(0,startT+e.clientY-dragY))+'px'});
+$('modalTitle').addEventListener('pointerup',()=>dragging=false);$('modalTitle').addEventListener('pointercancel',()=>dragging=false);
+(async()=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.onload=async()=>{supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const {data:{user}}=await supabaseClient.auth.getUser();if(!user){location.href='login.html';return}const {data:profile,error}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();if(error){document.body.insertAdjacentHTML('afterbegin','<div style="position:fixed;inset:0;z-index:99999;background:#f4f4f0;color:#171717;display:grid;place-items:center;font-family:Courier New,monospace;padding:24px;text-align:center"><div><h2 style="font-family:Impact,Arial,sans-serif;font-size:32px;margin:0 0 12px">SHOP OWNER PAGE ERROR</h2><p>Unable to load your account role. Please refresh or sign in again.</p></div></div>');console.error('Profile lookup failed:',error);return}if(!['shop_owner','admin'].includes(profile?.role)){location.href='index.html';return}if(profile.role==='admin')$('adminDashboardBtn').style.display='inline-block';await loadInventory()};document.head.appendChild(s)})();
 </script>
-  <script src="js/realtime-sync.js"></script>
+<script src="js/realtime-sync.js"></script>
 </body>
 </html>
