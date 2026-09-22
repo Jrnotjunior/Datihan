@@ -796,3 +796,32 @@
     await handlePendingCartFromUrl();
     loadPopups();
   })();
+
+
+// DATIHAN REALTIME HANDLERS
+window.addEventListener('datihan:realtime', async (event) => {
+  const table = event.detail && event.detail.table;
+  try {
+    if(table === 'inventory' && typeof loadProducts === 'function'){
+      await loadProducts();
+    }
+    if(table === 'popups' && typeof loadPopups === 'function'){
+      await loadPopups();
+    }
+    if(table === 'cart_items' && typeof loadCartForUser === 'function'){
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if(user){
+        await loadCartForUser(user);
+        renderCartBadge();
+        renderCartDrawer();
+        renderShopGrid();
+      }
+    }
+    if(table === 'orders' && typeof loadProducts === 'function'){
+      // Order changes can make inventory unavailable; recheck the shop.
+      await loadProducts();
+    }
+  } catch(error){
+    console.error('Datihan realtime UI update failed:', error);
+  }
+});
