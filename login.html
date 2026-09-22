@@ -44,7 +44,7 @@ button:disabled{cursor:not-allowed;opacity:.65}
   </form>
 
   <div class="hint">Sign in to keep your cart connected to your account and continue shopping.</div>
-  <div class="back-wrap"><a class="back-btn" href="index.html">BACK TO DATIHAN</a></div>
+  <div class="back-wrap"><a class="back-btn" id="backBtn" href="index.html">BACK TO DATIHAN</a></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -53,36 +53,17 @@ const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
 const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const msg=document.getElementById('msg');
+const pendingAdd=new URLSearchParams(location.search).get('add');
+const pendingQuery=pendingAdd ? '?add='+encodeURIComponent(pendingAdd) : '';
+
+document.getElementById('backBtn').href='index.html'+pendingQuery;
 
 function show(t){msg.textContent=t;msg.classList.add('show')}
-
-function cartStorageKey(userId){
-  return 'datihan_cart_user_v2_' + encodeURIComponent(String(userId));
-}
-
-function attachPendingCartItem(userId){
-  const pendingId=localStorage.getItem('datihan_pending_add_to_cart');
-  if(!pendingId) return;
-
-  const key=cartStorageKey(userId);
-  let cart={};
-  try{ cart=JSON.parse(localStorage.getItem(key)) || {}; }catch(e){ cart={}; }
-
-  cart[pendingId]=(cart[pendingId]||0)+1;
-  localStorage.setItem(key,JSON.stringify(cart));
-  localStorage.removeItem('datihan_pending_add_to_cart');
-}
 
 async function finishLogin(user){
   const{data,error}=await sb.from('profiles').select('role').eq('id',user.id).single();
   if(error){show('Login worked, but the role profile is not ready yet.');return false}
-
-  // If the buyer was redirected here because they clicked Add to Cart,
-  // attach that item to THIS Supabase account's cart.
-  attachPendingCartItem(user.id);
-
-  // All successful logins return to the Datihan Store front door.
-  location.href='index.html';
+  location.href='index.html'+pendingQuery;
   return true
 }
 
@@ -106,15 +87,12 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
   }
 
   await finishLogin(data.user);
-  btn.disabled=false;
-  btn.textContent='SIGN IN';
 });
 
 (async()=>{
   const{data}=await sb.auth.getSession();
   if(data.session){
-    attachPendingCartItem(data.session.user.id);
-    location.href='index.html';
+    location.href='index.html'+pendingQuery;
   }
 })();
 </script>
