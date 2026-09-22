@@ -56,6 +56,7 @@
   // ---------------- CART (ACCOUNT-BASED / SUPABASE) ----------------
   // Cart data is never stored in browser localStorage. Each authenticated
   // buyer has an isolated cart identified by their Supabase auth user id.
+  // Datihan currently sells unique thrift items, so each cart item is quantity 1.
   let cart = {};
   let cartUserId = null;
 
@@ -76,12 +77,14 @@
     }
 
     (data || []).forEach(row => {
-      cart[String(row.product_id)] = Number(row.quantity) || 0;
+      // Current Datihan inventory is one-of-a-kind: normalize every cart item to 1.
+      cart[String(row.product_id)] = Number(row.quantity) > 0 ? 1 : 0;
     });
     renderCartBadge();
   }
 
   async function saveCartItem(productId, quantity){
+    quantity = quantity > 0 ? 1 : 0;
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return false;
 
@@ -98,7 +101,7 @@
     const { error } = await supabaseClient
       .from('cart_items')
       .upsert(
-        { user_id:user.id, product_id:productId, quantity },
+        { user_id:user.id, product_id:productId, quantity:1 },
         { onConflict:'user_id,product_id' }
       );
     if(error){ console.error('Could not save cart item:', error); return false; }
@@ -156,7 +159,8 @@
     }
 
     if(cartUserId !== user.id) await loadCartForUser(user);
-    const next = (cart[id] || 0) + 1;
+    // A unique thrift item can only appear once in the cart.
+    const next = 1;
     if(await saveCartItem(id,next)){
       cart[id] = next;
       renderCartBadge();
@@ -167,9 +171,11 @@
   async function setQty(id, qty){
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
-    if(await saveCartItem(id,qty)){
-      if(qty <= 0) delete cart[id];
-      else cart[id] = qty;
+    // Quantity is intentionally limited to 1 for the current thrift-store model.
+    const nextQty = qty <= 0 ? 0 : 1;
+    if(await saveCartItem(id,nextQty)){
+      if(nextQty <= 0) delete cart[id];
+      else cart[id] = 1;
       renderCartBadge();
       renderCartDrawer();
     }
@@ -216,7 +222,7 @@
         + '<h3>'+safeName+'</h3>'
         + '<div class="meta">'+safeSize+' · '+safeCondition+' · '+safeCategory+'</div>'
         + '<div class="price"><span class="tag-font">#'+safeCode+'</span><span class="amt">'+peso(p.price)+'</span></div>'
-        + '<button class="add-btn" data-add="'+escapeHtml(p.id)+'" '+(p.soldOut?'disabled':'')+'>'+(p.soldOut ? 'Sold out' : (inCart ? 'Added ('+inCart+') · Add another' : 'Add to cart'))+'</button>'
+        + '<button class="add-btn" data-add="'+escapeHtml(p.id)+'" '+(p.soldOut?'disabled':'')+'>'+(p.soldOut ? 'Sold out' : (inCart ? 'Already in cart' : 'Add to cart'))+'</button>'
         + '</div>';
     }).join('');
     noResults.style.display = visible.length === 0 ? 'block' : 'none';
@@ -405,19 +411,14 @@
     cartBody.innerHTML = ids.map(id => {
       const p = findProduct(id);
       if(!p) return '';
-      const qty = cart[id];
       const media = p.image ? '<img src="'+p.image+'" alt="">' : iconSvg(p.category);
       return '<div class="cart-line" data-id="'+id+'">'
         + '<div class="thumb">'+media+'</div>'
         + '<div class="info">'
         +   '<h4>'+p.name+'</h4>'
         +   '<div class="row2">'
-        +     '<div class="qty-stepper">'
-        +       '<button data-step="-1" aria-label="Decrease quantity">−</button>'
-        +       '<span>'+qty+'</span>'
-        +       '<button data-step="1" aria-label="Increase quantity">+</button>'
-        +     '</div>'
-        +     '<span class="amt">'+peso(p.price*qty)+'</span>'
+        +     '<span class="cart-qty">Quantity: 1</span>'
+        +     '<span class="amt">'+peso(p.price)+'</span>'
         +   '</div>'
         +   '<button class="remove" data-remove>Remove</button>'
         + '</div>'
@@ -426,9 +427,6 @@
 
     cartBody.querySelectorAll('.cart-line').forEach(line => {
       const id = line.dataset.id;
-      line.querySelectorAll('[data-step]').forEach(btn => {
-        btn.addEventListener('click', () => setQty(id, cart[id] + Number(btn.dataset.step)));
-      });
       line.querySelector('[data-remove]').addEventListener('click', () => setQty(id, 0));
     });
 
@@ -508,43 +506,41 @@
     }
 
     if(cartUserId !== user.id) await loadCartForUser(user);
-    const orderItems = Object.entries(cart).map(([id,qty]) => ({
-      product_id: id,
-      quantity: qty,
+    const orderItems = Object.entries(cart).map(([id]) => ({
+      product_id: Number(id),
+      quantity: 1,
       price: findProduct(id)?.price || 0
     }));
 
-    const total = cartTotal();
-    const { error } = await supabaseClient.from('orders').insert({
-      user_id: user.id,
-      customer_name: document.getElementById('buyerName').value.trim(),
-      phone: document.getElementById('buyerPhone').value.trim(),
-      address: document.getElementById('buyerAddress').value.trim(),
-      notes: document.getElementById('buyerNotes').value.trim(),
-      items: orderItems,
-      total_amount: total,
-      status: 'pending'
-    });
-
-    if(error){
-      message.textContent = error.message;
+    if(!orderItems.length){
+      message.textContent = 'Your cart is empty.';
       message.className = 'auth-message error';
       btn.disabled = false;
       return;
     }
 
-    const { error: clearError } = await supabaseClient
-      .from('cart_items')
-      .delete()
-      .eq('user_id', user.id);
-    if(clearError){
-      message.textContent = clearError.message;
+    // Checkout is completed atomically in Supabase. The database function
+    // verifies availability, creates the order, marks items sold, and clears
+    // this buyer's cart in one transaction.
+    const { error } = await supabaseClient.rpc('place_datihan_order', {
+      p_customer_name: document.getElementById('buyerName').value.trim(),
+      p_phone: document.getElementById('buyerPhone').value.trim(),
+      p_address: document.getElementById('buyerAddress').value.trim(),
+      p_notes: document.getElementById('buyerNotes').value.trim()
+    });
+
+    if(error){
+      message.textContent = error.message || 'One or more items are no longer available. Please review your cart.';
       message.className = 'auth-message error';
       btn.disabled = false;
+      await loadProducts();
+      await loadCartForUser(user);
+      renderCartDrawer();
       return;
     }
 
     await loadCartForUser(user);
+    await loadProducts();
     renderCartBadge();
     renderCartDrawer();
     message.textContent = 'Order placed successfully.';
@@ -680,7 +676,7 @@
     const p = findProduct(pendingId);
     if(!p || p.soldOut) return;
     if(cartUserId !== user.id) await loadCartForUser(user);
-    const next = (cart[pendingId] || 0) + 1;
+    const next = 1;
     if(await saveCartItem(pendingId,next)){
       cart[pendingId] = next;
       renderCartBadge();
