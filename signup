@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Datihan — Sign Up</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:#e6e6e2;
+  color:#171717;
+  font-family:"Courier New",monospace
+}
+.box{
+  width:min(430px,calc(100% - 28px));
+  background:#f8f8f5;
+  border:1px solid #aaa;
+  padding:30px;
+  box-shadow:8px 8px 0 #171717
+}
+.brand{
+  text-align:center;
+  font-size:12px;
+  letter-spacing:2px;
+  margin-bottom:8px
+}
+.box h1{
+  text-align:center;
+  font-family:Impact,Arial,sans-serif;
+  font-size:46px;
+  line-height:1;
+  margin:0 0 24px
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin:14px 0
+}
+.field label{
+  font-size:12px;
+  text-transform:uppercase
+}
+.field input{
+  padding:12px;
+  border:1px solid #aaa;
+  background:#fff;
+  font:inherit;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease
+}
+.field input:hover{
+  border-color:#171717;
+  background:#fafafa
+}
+.field input:focus{
+  border-color:#171717;
+  box-shadow:4px 4px 0 #171717;
+  background:#fff
+}
+button,.back-btn{
+  width:100%;
+  padding:13px;
+  border:1px solid #171717;
+  background:#171717;
+  color:#fff;
+  font:700 14px inherit;
+  cursor:pointer;
+  margin-top:8px;
+  transition:background .15s ease,color .15s ease,transform .15s ease,box-shadow .15s ease;
+  text-decoration:none;
+  text-align:center;
+  display:block
+}
+button:hover:not(:disabled),.back-btn:hover{
+  background:#fff;
+  color:#171717;
+  transform:translate(-2px,-2px);
+  box-shadow:4px 4px 0 #171717
+}
+.msg{
+  display:none;
+  padding:10px;
+  margin:14px 0;
+  border:1px solid #d5a8a3;
+  background:#fff6f5;
+  color:#9b241b;
+  font-size:12px
+}
+.msg.show{display:block}
+.success{
+  border-color:#9fc9a5;
+  background:#f3faf4;
+  color:#246b2c
+}
+.hint{
+  text-align:center;
+  font-size:11px;
+  color:#666;
+  margin-top:18px;
+  line-height:1.5
+}
+.account-link{
+  display:block;
+  text-align:center;
+  margin-top:16px;
+  color:#333;
+  font-size:12px;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  transition:color .15s ease,transform .15s ease
+}
+.account-link:hover{
+  color:#000;
+  transform:translateY(-2px)
+}
+.back-wrap{margin-top:10px}
+button:focus-visible,.field input:focus-visible,.back-btn:focus-visible,.account-link:focus-visible{
+  outline:2px solid #171717;
+  outline-offset:2px
+}
+button:disabled{
+  cursor:not-allowed;
+  opacity:.65
+}
+</style>
+</head>
+
+<body>
+<main class="box">
+  <div class="brand">DATIHAN THRIFT SHOP</div>
+  <h1>SIGN UP</h1>
+
+  <div id="msg" class="msg"></div>
+
+  <form id="signupForm">
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" required>
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="new-password" minlength="6" required>
+    </div>
+
+    <div class="field">
+      <label for="confirmPassword">Confirm Password</label>
+      <input id="confirmPassword" type="password" autocomplete="new-password" minlength="6" required>
+    </div>
+
+    <button type="submit" id="signupBtn">CREATE ACCOUNT</button>
+  </form>
+
+  <div class="hint">
+    Create your Datihan account to keep your cart connected to your account.
+  </div>
+
+  <a class="account-link" href="login.html">Already have an account? Log in</a>
+
+  <div class="back-wrap">
+    <a class="back-btn" href="index.html">BACK TO DATIHAN</a>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
+const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const msg=document.getElementById('msg');
+const form=document.getElementById('signupForm');
+const btn=document.getElementById('signupBtn');
+
+function showMessage(text,success=false){
+  msg.textContent=text;
+  msg.classList.toggle('success',success);
+  msg.classList.add('show');
+}
+
+function cartStorageKey(userId){
+  return 'datihan_cart_user_v2_' + encodeURIComponent(String(userId));
+}
+
+function attachPendingCartItem(userId){
+  const pendingId=localStorage.getItem('datihan_pending_add_to_cart');
+  if(!pendingId) return;
+
+  const key=cartStorageKey(userId);
+  let cart={};
+
+  try{
+    cart=JSON.parse(localStorage.getItem(key)) || {};
+  }catch(e){
+    cart={};
+  }
+
+  cart[pendingId]=(cart[pendingId]||0)+1;
+  localStorage.setItem(key,JSON.stringify(cart));
+  localStorage.removeItem('datihan_pending_add_to_cart');
+}
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+
+  msg.classList.remove('show');
+  msg.classList.remove('success');
+
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  const confirmPassword=document.getElementById('confirmPassword').value;
+
+  if(password !== confirmPassword){
+    showMessage('Passwords do not match.');
+    return;
+  }
+
+  if(password.length < 6){
+    showMessage('Password must be at least 6 characters.');
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='CREATING ACCOUNT...';
+
+  const {data,error}=await sb.auth.signUp({
+    email,
+    password
+  });
+
+  if(error){
+    showMessage(error.message);
+    btn.disabled=false;
+    btn.textContent='CREATE ACCOUNT';
+    return;
+  }
+
+  /*
+    If Supabase email confirmation is disabled, a session is returned
+    immediately and the pending cart item can be attached to this account.
+  */
+  if(data.session && data.user){
+    attachPendingCartItem(data.user.id);
+    showMessage('Account created successfully. Returning to Datihan...',true);
+
+    setTimeout(()=>{
+      location.href='index.html';
+    },700);
+    return;
+  }
+
+  /*
+    If email confirmation is enabled, Supabase creates the account but
+    does not return a session yet. The buyer must confirm their email
+    before logging in.
+  */
+  showMessage(
+    'Your account was created. Please check your email to confirm your account, then log in.',
+    true
+  );
+
+  btn.disabled=false;
+  btn.textContent='CREATE ACCOUNT';
+});
+</script>
+</body>
+</html>
