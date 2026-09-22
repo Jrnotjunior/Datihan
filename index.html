@@ -778,6 +778,24 @@
     return value ? new Date(value + 'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}) : '';
   }
 
+  function popupTimeText(value){
+    if(!value) return '';
+    const parts=String(value).slice(0,5).split(':');
+    const d=new Date(2000,0,1,Number(parts[0]),Number(parts[1]));
+    return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  }
+
+  function popupStatus(p){
+    if(!p.event_date) return 'Announcement';
+    const now = new Date();
+    const [y,m,d] = p.event_date.split('-').map(Number);
+    const start = p.start_time ? new Date(y,m-1,d,...String(p.start_time).slice(0,5).split(':').map(Number)) : new Date(y,m-1,d,0,0);
+    const end = p.end_time ? new Date(y,m-1,d,...String(p.end_time).slice(0,5).split(':').map(Number)) : new Date(y,m-1,d,23,59,59,999);
+    if(now < start) return 'Upcoming';
+    if(now <= end) return 'Ongoing';
+    return 'Ended';
+  }
+
   function renderPopups(){
     const list = document.getElementById('popupEventList');
     const homeTitle = document.getElementById('homePopupTitle');
@@ -806,13 +824,16 @@
       const message = escapeHtml(p.message);
       const location = escapeHtml(p.location || '');
       const date = popupDateText(p.event_date);
-      return '<div class="event-row"><div class="event-info"><h3>'+title+'</h3><p>'+message+(location?' · '+location:'')+(date?' · '+date:'')+'</p></div><div class="event-status">Upcoming</div></div>';
+      const time = [popupTimeText(p.start_time), popupTimeText(p.end_time)].filter(Boolean).join(' – ');
+      const status = popupStatus(p);
+      return '<div class="event-row"><div class="event-info"><h3>'+title+'</h3><p>'+message+(location?' · '+location:'')+(date?' · '+date:'')+(time?' · '+time:'')+'</p></div><div class="event-status">'+status+'</div></div>';
     }).join('');
 
     const first = ACTIVE_POPUPS[0];
     const firstLocation = first.location ? String(first.location) : '';
     const firstDate = popupDateText(first.event_date);
-    const firstMeta = [firstLocation, firstDate].filter(Boolean).join(' · ');
+    const firstTime = [popupTimeText(first.start_time), popupTimeText(first.end_time)].filter(Boolean).join(' – ');
+    const firstMeta = [firstLocation, firstDate, firstTime].filter(Boolean).join(' · ');
 
     if(homeTitle) homeTitle.textContent = first.title || 'Datihan Pop-Up';
     if(homeMeta) homeMeta.textContent = firstMeta;
