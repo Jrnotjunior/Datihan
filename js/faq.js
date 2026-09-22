@@ -1,7 +1,12 @@
 // Datihan FAQ module
 // Phase 5: FAQ behavior is isolated here.
-// Shared helper: main.js uses escapeHtml when rendering products/pop-ups.
-// Keep it global so the existing main.js can use it without changing the working page structure.
+// Compatibility guard: the current main.js calls openCheckoutAfterLogin()
+// during initialization, but that helper is no longer present. Define a
+// harmless fallback so the rest of main.js can finish initializing products
+// and pop-ups instead of stopping with a ReferenceError.
+window.openCheckoutAfterLogin = window.openCheckoutAfterLogin || function(){};
+
+// Shared helper used by main.js when rendering products/pop-ups.
 window.escapeHtml = window.escapeHtml || function(value){
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
