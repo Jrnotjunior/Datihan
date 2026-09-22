@@ -4,29 +4,347 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Datihan — Login</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#e6e6e2;color:#171717;font-family:"Courier New",monospace}.box{width:min(430px,calc(100% - 28px));background:#f8f8f5;border:1px solid #aaa;padding:30px;box-shadow:8px 8px 0 #171717}.brand{font-size:12px;letter-spacing:2px;margin-bottom:8px}.box h1{font-family:Impact,Arial,sans-serif;font-size:46px;line-height:1;margin:0 0 24px}.field{display:flex;flex-direction:column;gap:7px;margin:14px 0}.field label{font-size:12px;text-transform:uppercase}.field input{padding:12px;border:1px solid #aaa;background:#fff;font:inherit;outline:none;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}.field input:hover{border-color:#171717;background:#fafafa}.field input:focus{border-color:#171717;box-shadow:4px 4px 0 #171717;background:#fff}button{width:100%;padding:13px;border:1px solid #171717;background:#171717;color:#fff;font:700 14px inherit;cursor:pointer;margin-top:8px;transition:background .15s ease,color .15s ease,transform .15s ease,box-shadow .15s ease}button:hover:not(:disabled){background:#fff;color:#171717;transform:translate(-2px,-2px);box-shadow:4px 4px 0 #171717}.msg{display:none;padding:10px;margin:14px 0;border:1px solid #d5a8a3;background:#fff6f5;color:#9b241b;font-size:12px}.msg.show{display:block}.hint{font-size:11px;color:#666;margin-top:18px;line-height:1.5}.store{display:block;text-align:center;margin-top:18px;color:#333;font-size:12px;text-decoration:underline;text-underline-offset:3px;transition:color .15s ease,transform .15s ease}.store:hover{color:#000;transform:translateY(-2px)}button:focus-visible,.field input:focus-visible,.store:focus-visible{outline:2px solid #171717;outline-offset:2px}button:disabled{cursor:not-allowed;opacity:.65}
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  background:#e6e6e2;
+  color:#171717;
+  font-family:"Courier New",monospace;
+}
+
+/* LOGIN BOX */
+.box{
+  width:min(430px,calc(100% - 28px));
+  background:#f8f8f5;
+  border:1px solid #aaa;
+  padding:30px;
+  box-shadow:8px 8px 0 #171717;
+}
+
+/* CENTERED BRAND */
+.brand{
+  font-size:12px;
+  letter-spacing:2px;
+  margin-bottom:8px;
+  text-align:center;
+}
+
+/* CENTERED LOGIN TITLE */
+.box h1{
+  font-family:Impact,Arial,sans-serif;
+  font-size:46px;
+  line-height:1;
+  margin:0 0 24px;
+  text-align:center;
+}
+
+/* FORM */
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin:14px 0;
+}
+
+.field label{
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+.field input{
+  padding:12px;
+  border:1px solid #aaa;
+  background:#fff;
+  font:inherit;
+  outline:none;
+
+  transition:
+    border-color .15s ease,
+    box-shadow .15s ease,
+    background .15s ease;
+}
+
+/* INPUT HOVER */
+.field input:hover{
+  border-color:#171717;
+  background:#fafafa;
+}
+
+/* INPUT FOCUS */
+.field input:focus{
+  border-color:#171717;
+  box-shadow:4px 4px 0 #171717;
+  background:#fff;
+}
+
+/* BUTTONS */
+button{
+  width:100%;
+  padding:13px;
+  border:1px solid #171717;
+  background:#171717;
+  color:#fff;
+  font:700 14px inherit;
+  cursor:pointer;
+  margin-top:8px;
+
+  transition:
+    background .15s ease,
+    color .15s ease,
+    transform .15s ease,
+    box-shadow .15s ease;
+}
+
+/* SIGN IN HOVER */
+button:hover:not(:disabled){
+  background:#fff;
+  color:#171717;
+  transform:translate(-2px,-2px);
+  box-shadow:4px 4px 0 #171717;
+}
+
+/* MESSAGE */
+.msg{
+  display:none;
+  padding:10px;
+  margin:14px 0;
+  border:1px solid #d5a8a3;
+  background:#fff6f5;
+  color:#9b241b;
+  font-size:12px;
+}
+
+.msg.show{
+  display:block;
+}
+
+/* ACCOUNT INFORMATION */
+.hint{
+  font-size:11px;
+  color:#666;
+  margin-top:18px;
+  line-height:1.5;
+  text-align:center;
+}
+
+/* BACK TO DATIHAN BUTTON */
+.back-btn{
+  display:block;
+  width:100%;
+  text-align:center;
+  text-decoration:none;
+
+  padding:12px;
+  margin-top:18px;
+
+  border:1px solid #171717;
+  background:#f8f8f5;
+  color:#171717;
+
+  font:700 13px "Courier New",monospace;
+
+  transition:
+    background .15s ease,
+    color .15s ease,
+    transform .15s ease,
+    box-shadow .15s ease;
+}
+
+/* BACK BUTTON HOVER */
+.back-btn:hover{
+  background:#171717;
+  color:#fff;
+  transform:translate(-2px,-2px);
+  box-shadow:4px 4px 0 #171717;
+}
+
+/* ACCESSIBILITY */
+button:focus-visible,
+.field input:focus-visible,
+.back-btn:focus-visible{
+  outline:2px solid #171717;
+  outline-offset:2px;
+}
+
+button:disabled{
+  cursor:not-allowed;
+  opacity:.65;
+}
 </style>
 </head>
+
 <body>
+
 <main class="box">
-<div class="brand">DATIHAN THRIFT SHOP</div><h1>LOGIN</h1><div id="msg" class="msg"></div>
-<form id="loginForm"><div class="field"><label>Email</label><input id="email" type="email" autocomplete="email" required></div><div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" required></div><button type="submit" id="loginBtn">SIGN IN</button></form>
-<div class="hint">Buyers only need to log in when adding to cart.</div><a class="store" href="index.html">Back to Datihan</a>
+
+  <div class="brand">DATIHAN THRIFT SHOP</div>
+
+  <h1>LOGIN</h1>
+
+  <div id="msg" class="msg"></div>
+
+  <form id="loginForm">
+
+    <div class="field">
+      <label>Email</label>
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        required
+      >
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        required
+      >
+    </div>
+
+    <button type="submit" id="loginBtn">
+      SIGN IN
+    </button>
+
+  </form>
+
+  <div class="hint">
+    Sign in to your Datihan account to continue.
+    Your account role determines the pages you can access.
+  </div>
+
+  <a href="index.html" class="back-btn">
+    BACK TO DATIHAN
+  </a>
+
 </main>
+
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const msg=document.getElementById('msg');
-function show(t){msg.textContent=t;msg.classList.add('show')}
+const SUPABASE_URL =
+  'https://kymtqzyatofclfaeegfw.supabase.co';
+
+const SUPABASE_KEY =
+  'sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
+
+const sb = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const msg = document.getElementById('msg');
+
+function show(t){
+  msg.textContent = t;
+  msg.classList.add('show');
+}
+
 async function finishLogin(user){
-  const{data,error}=await sb.from('profiles').select('role').eq('id',user.id).single();
-  if(error){show('Login worked, but the role profile is not ready yet.');return false}
-  // Every successful login starts at the public buyer/store page.
-  location.href='index.html';
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if(error){
+    show('Login worked, but the role profile is not ready yet.');
+    return false;
+  }
+
+  /*
+    All users initially enter the Datihan Store.
+
+    Admin:
+      Store → Admin Dashboard
+
+    Shop Owner:
+      Store → Shop Owner Dashboard
+
+    Buyer:
+      Store → Login required when adding to cart
+  */
+
+  location.href = 'index.html';
+
   return true;
 }
-document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();msg.classList.remove('show');const btn=document.getElementById('loginBtn');btn.disabled=true;btn.textContent='SIGNING IN...';const{data,error}=await sb.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});if(error)show(error.message);else await finishLogin(data.user);btn.disabled=false;btn.textContent='SIGN IN'});
-(async()=>{const{data}=await sb.auth.getSession();if(data.session){location.href='index.html'}})();
+
+
+document
+  .getElementById('loginForm')
+  .addEventListener('submit', async e => {
+
+    e.preventDefault();
+
+    msg.classList.remove('show');
+
+    const btn = document.getElementById('loginBtn');
+
+    btn.disabled = true;
+    btn.textContent = 'SIGNING IN...';
+
+    const { data, error } =
+      await sb.auth.signInWithPassword({
+        email:
+          document
+            .getElementById('email')
+            .value
+            .trim(),
+
+        password:
+          document
+            .getElementById('password')
+            .value
+      });
+
+    if(error){
+
+      show(error.message);
+
+      btn.disabled = false;
+      btn.textContent = 'SIGN IN';
+
+    }else{
+
+      await finishLogin(data.user);
+
+      btn.disabled = false;
+      btn.textContent = 'SIGN IN';
+
+    }
+
+});
+
+
+/*
+  If already logged in,
+  return to the Datihan Store.
+*/
+(async()=>{
+
+  const { data } =
+    await sb.auth.getSession();
+
+  if(data.session){
+    location.href = 'index.html';
+  }
+
+})();
 </script>
+
 </body>
 </html>
