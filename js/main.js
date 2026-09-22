@@ -83,8 +83,9 @@
     }
 
     // A cart can contain an item that another buyer has already purchased.
-    // The public shop hides sold inventory, so remove stale cart rows too.
-    // Otherwise the drawer can look empty while the badge still counts them.
+    // The public shop hides sold inventory, so we must also remove those stale
+    // cart rows. Otherwise the drawer can look empty while the badge still
+    // counts the sold items.
     const productIds = rows.map(row => String(row.product_id));
     const { data: inventoryRows, error: inventoryError } = await supabaseClient
       .from('inventory')
@@ -93,6 +94,7 @@
 
     if(inventoryError){
       console.error('Could not verify cart item availability:', inventoryError);
+      // Keep the account cart intact if availability cannot be checked.
       rows.forEach(row => {
         cart[String(row.product_id)] = Number(row.quantity) > 0 ? 1 : 0;
       });
@@ -206,25 +208,36 @@
     }
 
     if(cartUserId !== user.id) await loadCartForUser(user);
-    // A unique thrift item can only appear once in the cart.
-    const next = 1;
-    if(await saveCartItem(id,next)){
-      cart[id] = next;
+    // A thrift listing represents one unique physical item.
+    // Adding it again keeps the cart quantity at 1.
+    if(cart[id]){
       renderCartBadge();
       renderCartDrawer();
+      renderShopGrid();
+      return;
+    }
+
+    if(await saveCartItem(id,1)){
+      cart[id] = 1;
+      renderCartBadge();
+      renderCartDrawer();
+      renderShopGrid();
     }
   }
 
   async function setQty(id, qty){
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
-    // Quantity is intentionally limited to 1 for the current thrift-store model.
+
+    // Current Datihan inventory is unique-item inventory: only 0 (remove)
+    // or 1 (keep) is valid until Shop Owner quantity support is introduced.
     const nextQty = qty <= 0 ? 0 : 1;
     if(await saveCartItem(id,nextQty)){
-      if(nextQty <= 0) delete cart[id];
+      if(nextQty === 0) delete cart[id];
       else cart[id] = 1;
       renderCartBadge();
       renderCartDrawer();
+      renderShopGrid();
     }
   }
 
@@ -366,77 +379,48 @@
       const location = escapeHtml(p.location || '');
       const date = popupDateText(p.event_date);
       const time = [popupTimeText(p.start_time),popupTimeText(p.end_time)].filter(Boolean).join(' – ');
-      const meta = [location,date,time].filter(Boolean).join(' · ');
-      return '<div class="event-row"><div class="event-info"><h3>'+title+'</h3><p>'+message+(meta?' · '+meta:'')+'</p></div><div class="event-status">'+popupStatus(p)+'</div></div>';
+      const status = popupStatus(p);
+      const destination = popupDestination(p.destination);
+      return '<article class="event-row">'
+        + '<div class="event-info"><h3>'+title+'</h3><p>'+message+'</p>'
+        + (location?'<span class="event-location">'+location+'</span>':'')
+        + (date?'<span class="event-date">'+date+(time?' · '+time:'')+'</span>':'')
+        + '</div>'
+        + '<div class="event-status">'+escapeHtml(status)+'</div>'
+        + '<button class="btn btn-outline" type="button" data-popup-go="'+escapeHtml(destination)+'">View</button>'
+        + '</article>';
     }).join('');
 
+    list.querySelectorAll('[data-popup-go]').forEach(btn=>btn.addEventListener('click',()=>activateTab(btn.dataset.popupGo)));
+
     const first = ACTIVE_POPUPS[0];
-    const firstTitle = first.title || 'Datihan pop-up';
-    const firstMeta = [first.message,first.location,popupDateText(first.event_date),[popupTimeText(first.start_time),popupTimeText(first.end_time)].filter(Boolean).join(' – ')].filter(Boolean).join(' · ');
-    const firstButton = first.button_text || 'See details';
-    const destination = popupDestination(first.button_tab);
-
+    const firstTitle = first?.title || 'Datihan pop-up';
+    const firstMessage = first?.message || '';
     if(homeTitle) homeTitle.textContent = firstTitle;
-    if(homeMeta) homeMeta.textContent = firstMeta;
+    if(homeMeta) homeMeta.textContent = firstMessage;
     if(homeButton){
-      homeButton.textContent = firstButton;
-      homeButton.onclick = () => activateTab(destination);
+      homeButton.textContent='View pop-up';
+      homeButton.onclick=()=>activateTab(popupDestination(first?.destination));
     }
-
     if(banner){
       banner.hidden=false;
       banner.classList.remove('hidden');
-      if(bannerMsg) bannerMsg.textContent = first.message ? firstTitle + ' — ' + first.message : firstTitle;
-      if(bannerGo){
-        bannerGo.textContent = firstButton;
-        bannerGo.onclick = () => activateTab(destination);
-      }
+      if(bannerMsg) bannerMsg.textContent=firstTitle;
+      if(bannerGo) bannerGo.onclick=()=>activateTab(popupDestination(first?.destination));
     }
   }
 
   async function loadPopups(){
-    const {data,error} = await supabaseClient
-      .from('popups')
-      .select('*')
-      .eq('is_active', true)
-      .order('event_date',{ascending:true,nullsFirst:false})
-      .order('created_at',{ascending:false});
-
-    if(error){
-      console.error('Could not load pop-ups:', error);
-      ACTIVE_POPUPS=[];
-    }else{
-      ACTIVE_POPUPS=data||[];
-    }
+    const {data,error}=await supabaseClient.from('popups').select('*').eq('is_active',true).order('event_date',{ascending:true}).order('start_time',{ascending:true});
+    if(error){ console.error('Could not load popups:',error); return; }
+    ACTIVE_POPUPS=data||[];
     renderPopups();
   }
 
-  document.getElementById('newsBannerClose').addEventListener('click', () => {
-    const banner=document.getElementById('newsBanner');
-    banner.classList.add('hidden');
-    banner.hidden=true;
-  });
-
   // ---------------- CART DRAWER ----------------
-  const overlayBg = document.getElementById('overlayBg');
   const cartDrawer = document.getElementById('cartDrawer');
-  const checkoutDrawer = document.getElementById('checkoutDrawer');
   const cartBody = document.getElementById('cartBody');
   const cartFoot = document.getElementById('cartFoot');
-
-  function openDrawer(drawer){
-    overlayBg.classList.add('open');
-    drawer.classList.add('open');
-  }
-  function closeDrawers(){
-    overlayBg.classList.remove('open');
-    cartDrawer.classList.remove('open');
-    checkoutDrawer.classList.remove('open');
-  }
-  overlayBg.addEventListener('click', closeDrawers);
-  document.getElementById('closeCart').addEventListener('click', closeDrawers);
-  document.getElementById('closeCheckout').addEventListener('click', closeDrawers);
-
   document.getElementById('cartBtn').addEventListener('click', async () => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user){
@@ -553,23 +537,19 @@
     }
 
     if(cartUserId !== user.id) await loadCartForUser(user);
-    const orderItems = Object.entries(cart).map(([id]) => ({
-      product_id: Number(id),
-      quantity: 1,
-      price: findProduct(id)?.price || 0
-    }));
 
-    if(!orderItems.length){
+    if(Object.keys(cart).length === 0){
       message.textContent = 'Your cart is empty.';
       message.className = 'auth-message error';
       btn.disabled = false;
       return;
     }
 
-    // Checkout is completed atomically in Supabase. The database function
-    // verifies availability, creates the order, marks items sold, and clears
-    // this buyer's cart in one transaction.
-    const { error } = await supabaseClient.rpc('place_datihan_order', {
+    // Phase 8: checkout is performed atomically in Supabase.
+    // The database function locks the selected inventory rows, confirms that
+    // every item is still available, creates the order, marks the items sold,
+    // and clears the buyer's cart in one transaction.
+    const { data: checkoutResult, error } = await supabaseClient.rpc('place_datihan_order', {
       p_customer_name: document.getElementById('buyerName').value.trim(),
       p_phone: document.getElementById('buyerPhone').value.trim(),
       p_address: document.getElementById('buyerAddress').value.trim(),
@@ -577,20 +557,21 @@
     });
 
     if(error){
-      message.textContent = error.message || 'One or more items are no longer available. Please review your cart.';
+      console.error('Checkout failed:', error);
+      message.textContent = error.message || 'Some item in your cart is no longer available. Please review your cart.';
       message.className = 'auth-message error';
-      btn.disabled = false;
       await loadProducts();
       await loadCartForUser(user);
       renderCartDrawer();
+      btn.disabled = false;
       return;
     }
 
-    await loadCartForUser(user);
     await loadProducts();
+    await loadCartForUser(user);
     renderCartBadge();
     renderCartDrawer();
-    message.textContent = 'Order placed successfully.';
+    message.textContent = checkoutResult?.message || 'Order placed successfully.';
     message.className = 'auth-message success';
     btn.disabled = false;
   }
@@ -693,6 +674,8 @@
         cart = {};
         cartUserId = null;
         renderCartBadge();
+        renderCartDrawer();
+        renderShopGrid();
         location.href = 'index.html';
       };
       const {data:profile}=await supabaseClient.from('profiles').select('role').eq('id',user.id).single();
@@ -713,6 +696,77 @@
     }
   }
 
+  // ---------------- REAL-TIME SYNC ----------------
+  // Keep the buyer storefront synchronized with Supabase changes made by
+  // other buyers, the Shop Owner, or the Admin without requiring a refresh.
+  let realtimeChannel = null;
+  let realtimeCartUserId = null;
+
+  function stopRealtimeSync(){
+    if(realtimeChannel){
+      supabaseClient.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+    realtimeCartUserId = null;
+  }
+
+  async function startRealtimeSync(user){
+    stopRealtimeSync();
+
+    const channel = supabaseClient.channel('datihan-live-sync-' + Math.random().toString(36).slice(2));
+    realtimeChannel = channel;
+    realtimeCartUserId = user?.id || null;
+
+    channel.on('postgres_changes',
+      { event:'*', schema:'public', table:'inventory' },
+      async () => {
+        await loadProducts();
+        if(user?.id && cartUserId === user.id){
+          await loadCartForUser(user);
+          renderCartDrawer();
+        }
+        renderCartBadge();
+        renderShopGrid();
+      }
+    );
+
+    channel.on('postgres_changes',
+      { event:'*', schema:'public', table:'popups' },
+      async () => {
+        await loadPopups();
+      }
+    );
+
+    if(user?.id){
+      channel.on('postgres_changes',
+        {
+          event:'*',
+          schema:'public',
+          table:'cart_items',
+          filter:'user_id=eq.' + user.id
+        },
+        async () => {
+          await loadCartForUser(user);
+          renderCartBadge();
+          renderCartDrawer();
+          renderShopGrid();
+        }
+      );
+    }
+
+    channel.subscribe((status) => {
+      if(status === 'CHANNEL_ERROR') console.error('Datihan realtime channel error.');
+      if(status === 'TIMED_OUT') console.warn('Datihan realtime channel timed out.');
+    });
+  }
+
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    const user = session?.user || null;
+    if(user?.id !== realtimeCartUserId || !user){
+      await startRealtimeSync(user);
+    }
+  });
+
   // ---------------- INIT ----------------
   async function handlePendingCartFromUrl(){
     const params = new URLSearchParams(location.search);
@@ -723,11 +777,11 @@
     const p = findProduct(pendingId);
     if(!p || p.soldOut) return;
     if(cartUserId !== user.id) await loadCartForUser(user);
-    const next = 1;
-    if(await saveCartItem(pendingId,next)){
+    if(await saveCartItem(pendingId,1)){
       cart[pendingId] = 1;
       renderCartBadge();
       renderCartDrawer();
+      renderShopGrid();
       history.replaceState({}, document.title, location.pathname);
     }
   }
@@ -736,6 +790,7 @@
     await refreshAuthUI();
     const { data: { user } } = await supabaseClient.auth.getUser();
     await loadCartForUser(user);
+    await startRealtimeSync(user);
     renderCartBadge();
     await loadProducts();
     await handlePendingCartFromUrl();
