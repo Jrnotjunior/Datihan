@@ -291,6 +291,60 @@
     .auth-btn{ padding:.55rem .75rem; }
   }
 
+
+/* GLOBAL HOVER EFFECTS */
+.btn, .tabbtn, .header-cta, .auth-btn, .cart-btn, .role-nav-btn,
+.newsletter button, .go, .close, .drawer-close, .auth-close,
+.plate-logo, button {
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease, opacity .18s ease;
+}
+
+.btn:not(:disabled):hover,
+.header-cta:hover,
+.auth-btn:hover,
+.cart-btn:hover,
+.role-nav-btn:hover,
+.newsletter button:hover,
+#newsBanner button.go:hover,
+.tabbtn:hover,
+.drawer-close:hover,
+.auth-close:hover {
+  transform: translateY(-2px);
+}
+
+.btn:not(:disabled):active,
+.header-cta:active,
+.auth-btn:active,
+.cart-btn:active,
+.role-nav-btn:active,
+.newsletter button:active,
+#newsBanner button.go:active,
+.tabbtn:active {
+  transform: translateY(0);
+}
+
+.plate-logo:hover svg {
+  filter: drop-shadow(0 3px 5px rgba(27,27,26,.14));
+}
+
+.product-card, .event-card, .about-card, .feature-card, .consign-card {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.product-card:hover, .event-card:hover, .about-card:hover, .feature-card:hover, .consign-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(27,27,26,.10);
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .tabbtn, .header-cta, .auth-btn, .cart-btn, .role-nav-btn,
+  .newsletter button, .go, .close, .drawer-close, .auth-close,
+  .plate-logo, button, .product-card, .event-card, .about-card,
+  .feature-card, .consign-card { transition: none !important; }
+}
+
 </style>
 </head>
 <body>
