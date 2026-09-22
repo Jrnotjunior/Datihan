@@ -64,82 +64,6 @@ tbody tr:last-child td{border-bottom:0}
 
 .popup-panel{display:none}.popup-panel.active{display:block}.popup-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:20px 0 12px}.popup-list{display:block}.popup-table-wrap{background:#f8f8f5;border:1px solid var(--line);overflow:auto}.popup-table{width:100%;border-collapse:collapse;min-width:1050px}.popup-table th,.popup-table td{text-align:left;padding:14px 12px;border-bottom:1px solid #deded9;vertical-align:middle}.popup-table th{background:#f3f3ef;font-size:12px;letter-spacing:1px;text-transform:uppercase}.popup-table tbody tr:last-child td{border-bottom:0}.popup-title-cell{min-width:210px}.popup-title-cell strong{display:block;font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:22px;line-height:1.05;margin-bottom:5px}.popup-title-cell span{font-size:12px;color:#555}.popup-location{min-width:150px}.popup-time{white-space:nowrap}.popup-status{display:inline-block;padding:5px 9px;border:1px solid;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-status.upcoming{background:#f0faf3;color:#067647;border-color:#a8d4b7}.popup-status.live{background:#fff8e8;color:#8a5a00;border-color:#d9bd77}.popup-status.completed{background:#eee;color:#666;border-color:#bbb}.popup-status.hidden{background:#eee;color:#777;border-color:#aaa}.popup-visibility{display:inline-block;padding:5px 9px;border:1px solid #a8d4b7;background:#f0faf3;color:#067647;font-size:11px;font-weight:700;letter-spacing:.4px}.popup-visibility.hidden{border-color:#aaa;background:#eee;color:#777}.popup-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.popup-actions button{padding:8px 11px;font-size:12px}.popup-form textarea{min-height:100px}
 .popup-empty{padding:36px;text-align:center;color:#666;border:1px solid var(--line);background:#f8f8f5}
-
-/* Professional hover effects — no movement, no layout shifting */
-.hero-actions button,
-.admin-nav button,
-.toolbar input,
-.toolbar select,
-.table-wrap button,
-.popup-table button,
-.card {
-  transition: background-color .16s ease, color .16s ease,
-              border-color .16s ease, box-shadow .16s ease;
-}
-
-.hero-actions button:hover:not(:disabled),
-.admin-nav button:hover:not(:disabled),
-.table-wrap button:hover:not(:disabled),
-.popup-table button:hover:not(:disabled) {
-  transform: none !important;
-  box-shadow: 0 2px 8px rgba(23,23,23,.08);
-}
-
-.primary:hover:not(:disabled) {
-  background: #2b2b2b;
-  border-color: #2b2b2b;
-}
-
-.secondary:hover:not(:disabled) {
-  background: #ecebe7;
-  border-color: #777;
-}
-
-.signout:hover:not(:disabled) {
-  background: #8f1d15;
-  border-color: #8f1d15;
-}
-
-.admin-nav button:hover:not(:disabled) {
-  background: #ecebe7;
-}
-
-.admin-nav button.active:hover:not(:disabled) {
-  background: #2b2b2b;
-  color: #fff;
-}
-
-.card:hover {
-  background: #fafaf7;
-  border-color: #999;
-  box-shadow: 0 2px 8px rgba(23,23,23,.05);
-}
-
-.table-wrap tbody tr:hover td,
-.popup-table tbody tr:hover td {
-  background: #f1f1ee;
-}
-
-.hero-actions button:focus-visible,
-.admin-nav button:focus-visible,
-.table-wrap button:focus-visible,
-.popup-table button:focus-visible {
-  outline: 2px solid #8b8b84;
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-actions button,
-  .admin-nav button,
-  .toolbar input,
-  .toolbar select,
-  .table-wrap button,
-  .popup-table button,
-  .card {
-    transition: none !important;
-  }
-}
-
 </style>
 </head>
 <body>
@@ -279,6 +203,7 @@ function showMessage(t,type='ok'){
 }
 function money(v){return '₱'+Number(v||0).toLocaleString('en-PH',{minimumFractionDigits:2})}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function escapePopup(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
 function getItemImages(item){
   if(Array.isArray(item?.image_urls)) return item.image_urls.filter(Boolean);
@@ -581,8 +506,9 @@ $('modalTitle').addEventListener('pointercancel',()=>dragging=false);
     }
 
     // Only Admin accounts can see the shortcut back to Admin Dashboard.
-    $('adminDashboardBtn').style.display =
-      profile.role === 'admin' ? 'inline-block' : 'none';
+    if(profile.role === 'admin'){
+      $('adminDashboardBtn').style.display='inline-block';
+    }
 
     await loadInventory();
   };
