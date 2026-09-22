@@ -24,8 +24,8 @@ document.querySelectorAll('.faq-q').forEach(btn => {
 
 // ---------------- ADD-TO-CART ACCOUNT CHOICE ----------------
 // index.html currently has no dedicated add-to-cart choice modal. Intercept
-// unauthenticated Add to Cart clicks before main.js handles the button, then
-// give the buyer an explicit choice between Login and Sign Up.
+// Add to Cart clicks during capture so main.js cannot redirect an unauthenticated
+// buyer straight to login before the buyer gets the account-choice popup.
 (function(){
   const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
   const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
@@ -81,16 +81,29 @@ document.querySelectorAll('.faq-q').forEach(btn => {
     modal.setAttribute('aria-hidden','false');
   }
 
-  document.addEventListener('click',async event=>{
+  document.addEventListener('click',event=>{
     const button=event.target.closest('[data-add]');
     if(!button || button.disabled) return;
 
-    const {data:{user}}=await addAuthClient.auth.getUser();
-    if(user) return;
+    // Allow the original main.js click handler through after an authenticated
+    // session has been confirmed.
+    if(button.dataset.authBypass==='1'){
+      delete button.dataset.authBypass;
+      return;
+    }
 
+    // Stop main.js synchronously first. We then check the real Supabase user.
     event.preventDefault();
     event.stopPropagation();
     if(event.stopImmediatePropagation) event.stopImmediatePropagation();
-    openModal(button.dataset.add);
+
+    addAuthClient.auth.getUser().then(({data:{user}})=>{
+      if(user){
+        button.dataset.authBypass='1';
+        button.click();
+      }else{
+        openModal(button.dataset.add);
+      }
+    }).catch(()=>openModal(button.dataset.add));
   },true);
 })();
