@@ -13,6 +13,7 @@
   let currentUser = null;
   let menu = null;
   let applying = false;
+  let ordersBtn = null;
 
   function isOrdersControl(el) {
     const label = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -23,12 +24,36 @@
       href.includes('my-orders') || href.includes('orders.html') || id.includes('orders') || cls.includes('orders');
   }
 
+  function ensureOrdersButton() {
+    const headerRight = document.querySelector('.header-right');
+    const cartBtn = document.getElementById('cartBtn');
+    if (!headerRight || !cartBtn) return null;
+
+    if (!ordersBtn || !document.body.contains(ordersBtn)) {
+      ordersBtn = document.createElement('a');
+      ordersBtn.id = 'datihanOrdersBtn';
+      ordersBtn.href = 'orders.html';
+      ordersBtn.className = 'datihan-orders-icon';
+      ordersBtn.setAttribute('aria-label', 'My Orders');
+      ordersBtn.title = 'My Orders';
+      ordersBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 3.5h9l3 3V20.5H6z"/><path d="M15 3.5v3h3"/><path d="M9 11h6M9 14.5h6M9 18h4"/></svg>';
+      headerRight.insertBefore(ordersBtn, cartBtn);
+    }
+    return ordersBtn;
+  }
+
   function setAccountControls({ isShopOwner = false, isBuyer = false } = {}) {
     const cartBtn = document.getElementById('cartBtn');
     if (cartBtn) cartBtn.style.display = isShopOwner ? 'none' : '';
+
+    // Remove legacy text/order links. My Orders is now only the standalone icon.
     document.querySelectorAll('button, a').forEach(el => {
-      if (isOrdersControl(el)) el.style.display = isBuyer ? '' : 'none';
+      if (el !== ordersBtn && isOrdersControl(el)) el.remove();
     });
+
+    const standaloneOrders = ensureOrdersButton();
+    if (standaloneOrders) standaloneOrders.style.display = isBuyer ? 'inline-flex' : 'none';
+
     document.querySelectorAll('.chip-row').forEach(el => {
       el.style.display = isShopOwner ? 'none' : '';
     });
@@ -40,29 +65,69 @@
     const style = document.createElement('style');
     style.id = 'datihanAccountMenuStyles';
     style.textContent = `
-      /* Account controls: Shop Owner is always LEFT of the hamburger. */
+      /* Header order: Shop Owner LEFT, buyer My Orders + cart, hamburger RIGHT. */
       .header-right #roleNavBtn{order:1 !important}
-      .header-right .datihan-account-wrap{order:2 !important}
-      .header-right #authBtn{order:2 !important}
+      .header-right #datihanOrdersBtn{order:2 !important}
       .header-right #cartBtn{order:3 !important}
-      #authBtn.account-menu-trigger{width:44px;min-width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:0;position:relative}
-      #authBtn.account-menu-trigger .hamburger-lines,#authBtn.account-menu-trigger .hamburger-lines::before,#authBtn.account-menu-trigger .hamburger-lines::after{display:block;width:18px;height:2px;background:currentColor;content:'';transition:transform .18s ease}
+      .header-right .datihan-account-wrap{order:4 !important}
+      .header-right #authBtn{order:4 !important}
+
+      #datihanOrdersBtn.datihan-orders-icon{
+        width:42px;
+        min-width:42px;
+        height:42px;
+        padding:0;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        border:1px solid var(--line);
+        border-radius:2px;
+        background:none;
+        color:var(--ink);
+        text-decoration:none;
+        cursor:pointer;
+      }
+      #datihanOrdersBtn.datihan-orders-icon:hover{border-color:var(--accent);color:var(--accent)}
+      #datihanOrdersBtn.datihan-orders-icon svg{width:19px;height:19px}
+
+      #authBtn.account-menu-trigger{
+        width:42px;
+        min-width:42px;
+        height:42px;
+        padding:0;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:0;
+        position:relative;
+      }
+      #authBtn.account-menu-trigger .hamburger-lines,
+      #authBtn.account-menu-trigger .hamburger-lines::before,
+      #authBtn.account-menu-trigger .hamburger-lines::after{
+        display:block;
+        width:18px;
+        height:2px;
+        background:currentColor;
+        content:'';
+        transition:transform .18s ease;
+      }
       #authBtn.account-menu-trigger .hamburger-lines::before{position:absolute;transform:translateY(-6px)}
       #authBtn.account-menu-trigger .hamburger-lines::after{position:absolute;transform:translateY(6px)}
       #authBtn.account-menu-trigger[aria-expanded="true"] .hamburger-lines{background:transparent}
       #authBtn.account-menu-trigger[aria-expanded="true"] .hamburger-lines::before{transform:rotate(45deg)}
       #authBtn.account-menu-trigger[aria-expanded="true"] .hamburger-lines::after{transform:rotate(-45deg)}
+
       .datihan-account-wrap{position:relative;display:inline-flex}
       .datihan-account-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;padding:8px;background:var(--panel,#fff);border:1px solid var(--ink,#111);box-shadow:5px 5px 0 var(--ink,#111);z-index:1000}
       .datihan-account-menu[hidden]{display:none!important}
       .datihan-account-email{padding:9px 10px 10px;border-bottom:1px solid rgba(0,0,0,.18);font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
-      .datihan-account-orders{width:100%;margin-top:8px;padding:10px;border:1px solid var(--ink,#111);background:var(--panel,#fff);color:var(--ink,#111);font:inherit;cursor:pointer;text-align:left;text-decoration:none;display:block}
-      .datihan-account-orders:hover{background:#eee}
       .datihan-account-signout{width:100%;margin-top:8px;padding:10px;border:1px solid var(--ink,#111);background:var(--ink,#111);color:var(--panel,#fff);font:inherit;cursor:pointer;text-align:left}
       .datihan-account-signout:hover{opacity:.88}
       @media(max-width:900px){
         .header-right #roleNavBtn{order:1 !important}
-        .header-right .datihan-account-wrap{order:2 !important}
+        .header-right #datihanOrdersBtn{order:2 !important}
+        .header-right #cartBtn{order:3 !important}
+        .header-right .datihan-account-wrap{order:4 !important}
       }
     `;
     document.head.appendChild(style);
@@ -77,11 +142,14 @@
     if (!headerRight || !roleNavBtn) return;
     const accountWrap = authBtn.closest('.datihan-account-wrap');
     const accountNode = accountWrap || authBtn;
-    if (accountNode && roleNavBtn.nextElementSibling !== accountNode) {
+    if (accountNode && roleNavBtn.nextElementSibling !== accountNode && roleNavBtn.style.display !== 'none') {
       headerRight.insertBefore(roleNavBtn, accountNode);
     }
     roleNavBtn.style.order = '1';
-    accountNode.style.order = '2';
+    accountNode.style.order = '4';
+    if (ordersBtn) ordersBtn.style.order = '2';
+    const cartBtn = document.getElementById('cartBtn');
+    if (cartBtn) cartBtn.style.order = '3';
   }
 
   function closeMenu() {
@@ -118,7 +186,7 @@
     menu.id = 'datihanAccountMenu';
     menu.className = 'datihan-account-menu';
     menu.hidden = true;
-    menu.innerHTML = '<div class="datihan-account-email"></div><a class="datihan-account-orders" href="orders.html">My Orders</a><button class="datihan-account-signout" type="button">Sign out</button>';
+    menu.innerHTML = '<div class="datihan-account-email"></div><button class="datihan-account-signout" type="button">Sign out</button>';
     menu.querySelector('.datihan-account-email').textContent = user.email || 'Signed in';
     menu.querySelector('.datihan-account-signout').addEventListener('click', async () => {
       closeMenu();
@@ -140,6 +208,7 @@
       authBtn.setAttribute('aria-expanded', String(open));
     };
 
+    ordersBtn = ensureOrdersButton();
     normalizeHeaderOrder();
     showAuthControl();
     applying = false;
@@ -148,6 +217,9 @@
   function renderLoggedOut() {
     applying = true;
     removeMenu();
+    if (ordersBtn) {
+      ordersBtn.style.display = 'none';
+    }
     authBtn.innerHTML = 'Login';
     authBtn.classList.remove('logged-in', 'signed-in');
     authBtn.removeAttribute('aria-label');
@@ -197,6 +269,7 @@
       if (!trigger.classList.contains('account-menu-trigger') || !trigger.querySelector('.hamburger-lines')) {
         renderSignedIn(currentUser);
       }
+      ensureOrdersButton();
       normalizeHeaderOrder();
     });
     observer.observe(authBtn, { childList: true, characterData: true, attributes: true, subtree: true });
