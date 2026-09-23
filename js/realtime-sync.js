@@ -3,6 +3,15 @@
  * UI-specific rendering remains in each page; this bridge only emits a
  * normalized browser event and asks refresh-capable pages to update.
  */
+
+// Prevent the legacy main.js email text from flashing in the header while the
+// session/account module is loading. auth.js reveals the control once it has
+// rendered either the hamburger menu or the guest Login state.
+(function(){
+  const authBtn=document.getElementById('authBtn');
+  if(authBtn) authBtn.style.visibility='hidden';
+})();
+
 (function(){
   const URL = 'https://kymtqzyatofclfaeegfw.supabase.co';
   const KEY = 'sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
