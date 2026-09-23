@@ -52,7 +52,6 @@
     const cartBtn = document.getElementById('cartBtn');
     if (cartBtn) cartBtn.style.display = isShopOwner ? 'none' : '';
 
-    // Remove legacy text/order links. My Orders is now only the standalone icon.
     document.querySelectorAll('button, a').forEach(el => {
       if (el !== ordersBtn && isOrdersControl(el)) el.remove();
     });
@@ -142,24 +141,6 @@
 
   function showAuthControl() {
     authBtn.style.visibility = 'visible';
-  }
-
-  async function syncPendingProfile(user) {
-    try {
-      const raw = localStorage.getItem('datihanPendingProfile');
-      if (!raw || !user?.id) return;
-      const pending = JSON.parse(raw);
-      if (!pending?.email || !pending?.full_name) return;
-      if (pending.email.toLowerCase() !== (user.email || '').toLowerCase()) return;
-
-      const { error } = await client.from('profiles').upsert(
-        { id: user.id, full_name: pending.full_name },
-        { onConflict: 'id' }
-      );
-      if (!error) localStorage.removeItem('datihanPendingProfile');
-    } catch (error) {
-      console.warn('Datihan profile name sync skipped:', error);
-    }
   }
 
   function normalizeHeaderOrder() {
@@ -259,7 +240,6 @@
     currentUser = user || null;
 
     if (currentUser) {
-      await syncPendingProfile(currentUser);
       renderSignedIn(currentUser);
 
       const { data: profile } = await client.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
