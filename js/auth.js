@@ -1,5 +1,5 @@
 // Datihan account/session UI.
-// Keeps the header account control stable after main.js finishes loading.
+// Logged-in users always use the hamburger account control.
 (() => {
   const URL = 'https://kymtqzyatofclfaeegfw.supabase.co';
   const KEY = 'sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
@@ -12,7 +12,6 @@
 
   let currentUser = null;
   let menu = null;
-  let observer = null;
   let applying = false;
 
   function isOrdersControl(el) {
@@ -30,6 +29,7 @@
     document.querySelectorAll('button, a').forEach(el => {
       if (isOrdersControl(el)) el.style.display = isBuyer ? '' : 'none';
     });
+    // Category chips belong only to the Shop tab. Hide homepage chip rows.
     document.querySelectorAll('.chip-row').forEach(el => {
       el.style.display = isShopOwner ? 'none' : '';
     });
@@ -58,17 +58,17 @@
     document.head.appendChild(style);
   }
 
-  function closeMenu(){
-    if(menu) menu.hidden = true;
-    authBtn.setAttribute('aria-expanded','false');
+  function closeMenu() {
+    if (menu) menu.hidden = true;
+    authBtn.setAttribute('aria-expanded', 'false');
   }
 
-  function removeMenu(){
+  function removeMenu() {
     closeMenu();
-    if(menu) menu.remove();
+    if (menu) menu.remove();
     menu = null;
     const wrap = authBtn.closest('.datihan-account-wrap');
-    if(wrap){
+    if (wrap) {
       const parent = wrap.parentElement;
       parent.insertBefore(authBtn, wrap);
       wrap.remove();
@@ -77,7 +77,7 @@
     authBtn.removeAttribute('aria-haspopup');
   }
 
-  function renderSignedIn(user){
+  function renderSignedIn(user) {
     applying = true;
     ensureStyles();
     removeMenu();
@@ -102,10 +102,10 @@
     wrap.appendChild(menu);
 
     authBtn.classList.add('account-menu-trigger');
-    authBtn.classList.remove('signed-in');
-    authBtn.setAttribute('aria-label','Open account menu');
-    authBtn.setAttribute('aria-haspopup','menu');
-    authBtn.setAttribute('aria-expanded','false');
+    authBtn.classList.remove('signed-in', 'logged-in');
+    authBtn.setAttribute('aria-label', 'Open account menu');
+    authBtn.setAttribute('aria-haspopup', 'menu');
+    authBtn.setAttribute('aria-expanded', 'false');
     authBtn.innerHTML = '<span class="hamburger-lines" aria-hidden="true"></span>';
     authBtn.onclick = (event) => {
       event.stopPropagation();
@@ -116,55 +116,73 @@
     applying = false;
   }
 
-  function renderLoggedOut(){
+  function renderLoggedOut() {
     applying = true;
     removeMenu();
     authBtn.innerHTML = 'Login';
-    authBtn.classList.remove('logged-in','signed-in');
+    authBtn.classList.remove('logged-in', 'signed-in');
     authBtn.removeAttribute('aria-label');
     authBtn.removeAttribute('aria-expanded');
     authBtn.onclick = () => { location.href = 'login.html'; };
     applying = false;
   }
 
-  async function refresh(){
-    const { data:{ user } } = await client.auth.getUser();
+  async function refresh() {
+    const { data: { user } } = await client.auth.getUser();
     currentUser = user || null;
-    if(currentUser){
+
+    if (currentUser) {
+      // The header account control is ALWAYS the hamburger when signed in.
+      // The email is shown only inside the opened account menu.
       renderSignedIn(currentUser);
-      const { data: profile } = await client.from('profiles').select('role').eq('id',currentUser.id).maybeSingle();
-      if(profile?.role === 'shop_owner'){
-        if(roleNavBtn){ roleNavBtn.textContent='Shop owner'; roleNavBtn.style.display='inline-flex'; roleNavBtn.onclick=()=>location.href='shop-owner.html'; }
-        setAccountControls({isShopOwner:true,isBuyer:false});
-      }else{
-        if(roleNavBtn){ roleNavBtn.textContent=''; roleNavBtn.style.display='none'; }
-        setAccountControls({isShopOwner:false,isBuyer:true});
+
+      const { data: profile } = await client.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
+      if (profile?.role === 'shop_owner') {
+        if (roleNavBtn) {
+          roleNavBtn.textContent = 'Shop owner';
+          roleNavBtn.style.display = 'inline-flex';
+          roleNavBtn.onclick = () => location.href = 'shop-owner.html';
+        }
+        setAccountControls({ isShopOwner: true, isBuyer: false });
+      } else {
+        if (roleNavBtn) {
+          roleNavBtn.textContent = '';
+          roleNavBtn.style.display = 'none';
+        }
+        setAccountControls({ isShopOwner: false, isBuyer: true });
       }
-    }else{
+    } else {
       renderLoggedOut();
-      if(roleNavBtn){ roleNavBtn.textContent=''; roleNavBtn.style.display='none'; }
-      setAccountControls({isShopOwner:false,isBuyer:false});
+      if (roleNavBtn) {
+        roleNavBtn.textContent = '';
+        roleNavBtn.style.display = 'none';
+      }
+      setAccountControls({ isShopOwner: false, isBuyer: false });
     }
   }
 
-  function watchHeader(){
-    observer = new MutationObserver(() => {
-      if(applying || !currentUser) return;
+  // Only protect the hamburger from unrelated UI code. No email-button
+  // fallback or email-as-header-button behavior exists anymore.
+  function watchHeader() {
+    const observer = new MutationObserver(() => {
+      if (applying || !currentUser) return;
       const trigger = document.getElementById('authBtn');
-      if(!trigger.classList.contains('account-menu-trigger') || !trigger.querySelector('.hamburger-lines')){
+      if (!trigger.classList.contains('account-menu-trigger') || !trigger.querySelector('.hamburger-lines')) {
         renderSignedIn(currentUser);
       }
     });
-    observer.observe(authBtn,{childList:true,characterData:true,attributes:true,subtree:true});
+    observer.observe(authBtn, { childList: true, characterData: true, attributes: true, subtree: true });
   }
 
   document.addEventListener('click', event => {
     const wrap = authBtn.closest('.datihan-account-wrap');
-    if(wrap && !wrap.contains(event.target)) closeMenu();
+    if (wrap && !wrap.contains(event.target)) closeMenu();
   });
-  document.addEventListener('keydown', event => { if(event.key === 'Escape') closeMenu(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMenu();
+  });
 
-  client.auth.onAuthStateChange(() => { setTimeout(refresh,0); });
+  client.auth.onAuthStateChange(() => { setTimeout(refresh, 0); });
   window.datihanAuth = { supabaseClient: client, refreshAuthUI: refresh };
 
   refresh().then(watchHeader);
