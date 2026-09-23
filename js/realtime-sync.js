@@ -208,3 +208,20 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',renderOwnerCatalog,{once:true});else renderOwnerCatalog();
 })();
+
+// ---------------- ACCOUNT MENU LOADER ----------------
+// index.html already loads realtime-sync.js, but did not load auth.js.
+// Load the existing account-menu module here so signed-in users get the
+// hamburger account button and Sign out menu without changing page routing.
+(function(){
+  function loadAccountMenu(){
+    if(document.getElementById('datihanAuthScript')) return;
+    if(!document.getElementById('authBtn')) return;
+    const script=document.createElement('script');
+    script.id='datihanAuthScript';
+    script.src='js/auth.js?v=20260923';
+    script.async=false;
+    document.head.appendChild(script);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadAccountMenu,{once:true});else loadAccountMenu();
+})();
