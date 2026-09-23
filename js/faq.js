@@ -248,7 +248,7 @@ document.querySelectorAll('.faq-q').forEach(btn => {
       animation:datihanLoaderMove 1.05s ease-in-out infinite;
     }
     .datihan-loader-text{
-      font-family:'Manrope',monospace;
+      font-family:'Inter',monospace;
       font-size:.72rem;
       letter-spacing:.08em;
       text-transform:uppercase;

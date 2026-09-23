@@ -126,7 +126,7 @@
       .datihan-account-wrap{position:relative;display:inline-flex}
       .datihan-account-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;padding:8px;background:var(--panel,#fff);border:1px solid var(--ink,#111);box-shadow:5px 5px 0 var(--ink,#111);z-index:1000}
       .datihan-account-menu[hidden]{display:none!important}
-      .datihan-account-email{padding:9px 10px 10px;border-bottom:1px solid rgba(0,0,0,.18);font-family:'Manrope',monospace;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+      .datihan-account-email{padding:9px 10px 10px;border-bottom:1px solid rgba(0,0,0,.18);font-family:'Inter',monospace;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
       .datihan-account-signout{width:100%;margin-top:8px;padding:10px;border:1px solid var(--ink,#111);background:var(--ink,#111);color:var(--panel,#fff);font:inherit;cursor:pointer;text-align:left}
       .datihan-account-signout:hover{opacity:.88}
       @media(max-width:900px){

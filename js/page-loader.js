@@ -7,7 +7,7 @@
     if(document.querySelector('link[data-datihan-typography]')) return;
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap';
+    link.href='https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@600;700&family=Inter:wght@400;500;600;700&display=swap';
     link.dataset.datihanTypography='true';
     document.head.appendChild(link);
 
@@ -16,7 +16,7 @@
     style.textContent=`
       :root{
         --datihan-display-font:'Bodoni Moda',Georgia,serif;
-        --datihan-body-font:'Manrope',Arial,sans-serif;
+        --datihan-body-font:'Inter',Arial,sans-serif;
       }
       html,body,
       body *{font-family:var(--datihan-body-font)!important}
@@ -56,7 +56,7 @@
       position:fixed;inset:0;z-index:2147483647;
       display:grid;place-items:center;
       background:#f1f0ec;color:#171717;
-      font-family:'Manrope',Arial,sans-serif;
+      font-family:'Inter',Arial,sans-serif;
       opacity:1;visibility:visible;
       transition:opacity .18s ease,visibility .18s ease;
     }
