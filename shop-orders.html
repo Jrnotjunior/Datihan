@@ -5,240 +5,35 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Datihan Shop Owner — Orders</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f1f0ec;color:#171717;font-family:"Courier New",monospace}
-.wrap{max-width:1200px;margin:auto;padding:28px 18px 60px}
-.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:1px solid #aaa;padding-bottom:18px}
-.eyebrow{font-size:12px;letter-spacing:1px;color:#555}
-.top h1{margin:5px 0 0;font:900 52px/1 Impact,Arial,sans-serif}
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-button{border:1px solid #333;background:#f8f8f5;color:#171717;padding:10px 14px;font:700 13px "Courier New",monospace;cursor:pointer}
-button.primary{background:#171717;color:#fff}
-button.danger{color:#b42318;border-color:#d59b96}
-button:disabled{opacity:.55;cursor:not-allowed}
-.message{display:none;margin:18px 0;padding:12px;border:1px solid #b7d4c3;background:#f5faf6;color:#174b32;line-height:1.5}
-.message.show{display:block}
-.message.error{border-color:#e0b5b0;background:#fff7f6;color:#9b241a}
-.toolbar{display:flex;gap:10px;align-items:center;margin:20px 0 10px}
-.toolbar input{flex:1;padding:12px;border:1px solid #bbb;background:#fff;font:14px "Courier New",monospace}
-.count{font-size:12px;letter-spacing:1px}
-.table{background:#f8f8f5;border:1px solid #c9c9c3;overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:850px}
-th,td{text-align:left;padding:13px 12px;border-bottom:1px solid #ddd;vertical-align:middle}
-th{background:#f3f3ef;font-size:12px;text-transform:uppercase;letter-spacing:1px}
-.thumb{width:50px;height:60px;object-fit:cover;border:1px solid #bbb;background:#eee}
-.item{display:flex;align-items:center;gap:10px}
-.status{display:inline-block;padding:5px 8px;border:1px solid #aaa;font-size:11px;font-weight:700;text-transform:uppercase}
-.status.pending{background:#fff8e8;border-color:#d9bd77;color:#8a5a00}
-.status.confirmed{background:#f0faf3;border-color:#a8d4b7;color:#067647}
-.status.completed{background:#eef4ff;border-color:#a8bfdc;color:#24507a}
-.status.cancelled{background:#fff2f1;border-color:#e0aaa5;color:#b42318}
-.empty{text-align:center;padding:45px;color:#666}
-select{padding:8px 10px;border:1px solid #bbb;background:#fff;font:13px "Courier New",monospace}
-@media(max-width:650px){.top{align-items:flex-start;flex-direction:column}.top h1{font-size:40px}}
+*{box-sizing:border-box}body{margin:0;background:#f1f0ec;color:#171717;font-family:"Courier New",monospace}.wrap{max-width:1200px;margin:auto;padding:28px 18px 60px}.top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:1px solid #aaa;padding-bottom:18px}.eyebrow{font-size:12px;letter-spacing:1px;color:#555}.top h1{margin:5px 0 0;font:900 52px/1 Impact,Arial,sans-serif}.actions{display:flex;gap:8px;flex-wrap:wrap}button{border:1px solid #333;background:#f8f8f5;color:#171717;padding:10px 14px;font:700 13px "Courier New",monospace;cursor:pointer}button.danger{color:#b42318;border-color:#d59b96}.message{display:none;margin:18px 0;padding:12px;border:1px solid #b7d4c3;background:#f5faf6;color:#174b32;line-height:1.5}.message.show{display:block}.message.error{border-color:#e0b5b0;background:#fff7f6;color:#9b241a}.toolbar{display:flex;gap:10px;align-items:center;margin:20px 0 10px}.toolbar input{flex:1;padding:12px;border:1px solid #bbb;background:#fff;font:14px "Courier New",monospace}.count{font-size:12px;letter-spacing:1px}.table{background:#f8f8f5;border:1px solid #c9c9c3;overflow:auto}table{width:100%;border-collapse:collapse;min-width:850px}th,td{text-align:left;padding:13px 12px;border-bottom:1px solid #ddd;vertical-align:middle}th{background:#f3f3ef;font-size:12px;text-transform:uppercase;letter-spacing:1px}.thumb{width:50px;height:60px;object-fit:cover;border:1px solid #bbb;background:#eee}.item{display:flex;align-items:center;gap:10px}.buyer-name{font-weight:700}.buyer-id{display:block;font-size:10px;color:#777;margin-top:3px;max-width:240px;overflow:hidden;text-overflow:ellipsis}.status{display:inline-block;padding:5px 8px;border:1px solid #aaa;font-size:11px;font-weight:700;text-transform:uppercase}.status.pending{background:#fff8e8;border-color:#d9bd77;color:#8a5a00}.status.confirmed{background:#f0faf3;border-color:#a8d4b7;color:#067647}.status.completed{background:#eef4ff;border-color:#a8bfdc;color:#24507a}.status.cancelled{background:#fff2f1;border-color:#e0aaa5;color:#b42318}.empty{text-align:center;padding:45px;color:#666}select{padding:8px 10px;border:1px solid #bbb;background:#fff;font:13px "Courier New",monospace}@media(max-width:650px){.top{align-items:flex-start;flex-direction:column}.top h1{font-size:40px}}
 </style>
 </head>
 <body>
 <main class="wrap">
-<header class="top">
-  <div><div class="eyebrow">DATIHAN THRIFT SHOP / SHOP OWNER</div><h1>ORDERS</h1></div>
-  <div class="actions">
-    <button id="inventoryBtn" type="button">Inventory</button>
-    <button id="refreshBtn" class="primary" type="button">Refresh</button>
-    <button id="signOutBtn" class="danger" type="button">Sign Out</button>
-  </div>
-</header>
+<header class="top"><div><div class="eyebrow">DATIHAN THRIFT SHOP / SHOP OWNER</div><h1>ORDERS</h1></div><div class="actions"><button id="inventoryBtn" type="button">Inventory</button><button id="signOutBtn" class="danger" type="button">Sign Out</button></div></header>
 <div id="message" class="message"></div>
 <div class="toolbar"><input id="search" placeholder="Search order, buyer or item..."><span id="count" class="count">0 ORDERS</span></div>
 <div class="table"><table><thead><tr><th>Order</th><th>Item</th><th>Buyer</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="body"><tr><td colspan="6" class="empty">Starting orders page...</td></tr></tbody></table></div>
 </main>
-
 <script>
 const SUPABASE_URL='https://kymtqzyatofclfaeegfw.supabase.co';
 const SUPABASE_KEY='sb_publishable_2gwFi5f702YC_-py8PGxPw_z6iW67MN';
-let db=null, rows=[], inventoryMap={};
+let db=null,rows=[],inventoryMap={},profilesMap={},realtimeChannel=null,loading=false;
 const $=id=>document.getElementById(id);
-
 function esc(v){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));}
 function msg(t,e=false){$('message').textContent=t;$('message').className='message show'+(e?' error':'');}
 function clearMsg(){$('message').className='message';$('message').textContent='';}
-
-function withTimeout(promise,ms,label){
-  return Promise.race([
-    promise,
-    new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds.')),ms))
-  ]);
-}
-
-function loadScript(src){
-  return new Promise((resolve,reject)=>{
-    const existing=document.querySelector('script[data-supabase-loader]');
-    if(existing){
-      if(window.supabase){resolve();return;}
-      existing.addEventListener('load',()=>resolve(),{once:true});
-      existing.addEventListener('error',()=>reject(new Error('Supabase library failed to load.')),{once:true});
-      return;
-    }
-    const s=document.createElement('script');
-    s.src=src;
-    s.dataset.supabaseLoader='1';
-    s.onload=()=>window.supabase?resolve():reject(new Error('Supabase library loaded but window.supabase is unavailable.'));
-    s.onerror=()=>reject(new Error('Could not load Supabase from '+src));
-    document.head.appendChild(s);
-  });
-}
-
-async function initSupabase(){
-  if(window.supabase){db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return true;}
-  try{
-    await withTimeout(loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'),8000,'Supabase CDN');
-  }catch(first){
-    try{
-      await withTimeout(loadScript('https://unpkg.com/@supabase/supabase-js@2'),8000,'Supabase fallback CDN');
-    }catch(second){
-      msg('The Supabase library could not load. Check your internet connection, then refresh. '+second.message,true);
-      return false;
-    }
-  }
-  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  return true;
-}
-
-async function checkStaff(){
-  try{
-    const sessionResult=await withTimeout(db.auth.getSession(),8000,'Checking login session');
-    const user=sessionResult?.data?.session?.user;
-    if(sessionResult?.error) throw sessionResult.error;
-    if(!user){
-      msg('No active login session. Please sign in again.',true);
-      setTimeout(()=>location.href='login.html',1200);
-      return null;
-    }
-
-    const profileResult=await withTimeout(
-      db.from('profiles').select('role').eq('id',user.id).maybeSingle(),
-      8000,
-      'Checking account role'
-    );
-    if(profileResult.error) throw profileResult.error;
-    const role=profileResult.data?.role;
-    if(!['shop_owner','admin'].includes(role)){
-      msg('The currently signed-in account is not a shop owner/admin account. Please sign out and use datihan@gmail.com.',true);
-      return null;
-    }
-    return user;
-  }catch(err){
-    msg('Account check failed: '+(err?.message||err),true);
-    return null;
-  }
-}
-
-async function load(){
-  clearMsg();
-  $('body').innerHTML='<tr><td colspan="6" class="empty">Loading orders...</td></tr>';
-  $('refreshBtn').disabled=true;
-  try{
-    if(!db){
-      const ok=await initSupabase();
-      if(!ok)return;
-    }
-    const user=await checkStaff();
-    if(!user)return;
-
-    const result=await withTimeout(
-      db.from('orders').select('*').order('created_at',{ascending:false}),
-      10000,
-      'Loading orders'
-    );
-    if(result.error) throw result.error;
-
-    rows=result.data||[];
-    inventoryMap={};
-    const ids=[...new Set(rows.map(o=>o.inventory_id).filter(v=>v!==null&&v!==undefined))];
-    if(ids.length){
-      const itemResult=await withTimeout(
-        db.from('inventory').select('id,item_code,name,price,image_url').in('id',ids),
-        10000,
-        'Loading item details'
-      );
-      if(itemResult.error){
-        msg('Orders loaded, but item details could not be loaded: '+itemResult.error.message,true);
-      }else{
-        (itemResult.data||[]).forEach(i=>inventoryMap[String(i.id)]=i);
-      }
-    }
-    render();
-  }catch(err){
-    rows=[];
-    $('count').textContent='0 ORDERS';
-    $('body').innerHTML='<tr><td colspan="6" class="empty">Unable to load orders.</td></tr>';
-    msg('Could not load orders: '+(err?.message||err),true);
-  }finally{
-    $('refreshBtn').disabled=false;
-  }
-}
-
-function render(){
-  const q=$('search').value.trim().toLowerCase();
-  const list=rows.filter(o=>{
-    const p=inventoryMap[String(o.inventory_id)]||{};
-    return !q||[o.id,o.buyer_id,o.status,o.inventory_id,p.name,p.item_code].some(v=>String(v??'').toLowerCase().includes(q));
-  });
-  $('count').textContent=`${list.length} ORDER${list.length===1?'':'S'}`;
-  if(!list.length){$('body').innerHTML='<tr><td colspan="6" class="empty">No orders found.</td></tr>';return;}
-  $('body').innerHTML=list.map(o=>{
-    const p=inventoryMap[String(o.inventory_id)]||{};
-    const date=o.created_at?new Date(o.created_at).toLocaleString():'—';
-    return `<tr>
-      <td><strong>#${esc(o.id)}</strong></td>
-      <td><div class="item">${p.image_url?`<img class="thumb" src="${esc(p.image_url)}" alt="">`:''}<div><strong>${esc(p.name||'Item')}</strong><div>${esc(p.item_code||o.inventory_id)} · ₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></td>
-      <td>${esc(o.buyer_id)}</td>
-      <td>${esc(date)}</td>
-      <td><span class="status ${esc(o.status)}">${esc(o.status)}</span></td>
-      <td><select data-status="${esc(o.id)}"><option value="pending" ${o.status==='pending'?'selected':''}>Pending</option><option value="confirmed" ${o.status==='confirmed'?'selected':''}>Confirmed</option><option value="completed" ${o.status==='completed'?'selected':''}>Completed</option><option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option></select></td>
-    </tr>`;
-  }).join('');
-}
-
-$('body').addEventListener('change',async e=>{
-  const s=e.target.closest('[data-status]');
-  if(!s||!db)return;
-  const id=s.dataset.status,newStatus=s.value;
-  s.disabled=true;
-  try{
-    const result=await withTimeout(db.from('orders').update({status:newStatus}).eq('id',id),10000,'Updating order');
-    if(result.error)throw result.error;
-    const r=rows.find(o=>String(o.id)===String(id));
-    if(r)r.status=newStatus;
-    render();
-    msg('Order status updated.');
-    setTimeout(clearMsg,2500);
-  }catch(err){
-    msg('Could not update order: '+(err?.message||err),true);
-    await load();
-  }finally{s.disabled=false;}
-});
-
-$('search').oninput=render;
-$('refreshBtn').onclick=load;
-$('inventoryBtn').onclick=()=>location.href='shop-owner.html';
-$('signOutBtn').onclick=async()=>{
-  if(!db){location.href='login.html';return;}
-  $('signOutBtn').disabled=true;
-  try{
-    const result=await withTimeout(db.auth.signOut(),8000,'Signing out');
-    if(result.error)throw result.error;
-    location.href='login.html';
-  }catch(err){
-    $('signOutBtn').disabled=false;
-    msg('Sign out failed: '+(err?.message||err),true);
-  }
-};
-
-async function start(){
-  const ok=await initSupabase();
-  if(ok)await load();
-}
+function withTimeout(promise,ms,label){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds.')),ms))]);}
+function loadScript(src){return new Promise((resolve,reject)=>{const existing=document.querySelector('script[data-supabase-loader]');if(existing){if(window.supabase){resolve();return}existing.addEventListener('load',()=>resolve(),{once:true});existing.addEventListener('error',()=>reject(new Error('Supabase library failed to load.')),{once:true});return}const s=document.createElement('script');s.src=src;s.dataset.supabaseLoader='1';s.onload=()=>window.supabase?resolve():reject(new Error('Supabase library loaded but window.supabase is unavailable.'));s.onerror=()=>reject(new Error('Could not load Supabase from '+src));document.head.appendChild(s);});}
+async function initSupabase(){if(window.supabase){db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return true}try{await withTimeout(loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'),8000,'Supabase CDN')}catch(first){try{await withTimeout(loadScript('https://unpkg.com/@supabase/supabase-js@2'),8000,'Supabase fallback CDN')}catch(second){msg('The Supabase library could not load. '+second.message,true);return false}}db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return true}
+async function checkStaff(){try{const r=await withTimeout(db.auth.getSession(),8000,'Checking login session');const user=r?.data?.session?.user;if(r?.error)throw r.error;if(!user){msg('No active login session. Please sign in again.',true);setTimeout(()=>location.href='login.html',1200);return null}const p=await withTimeout(db.from('profiles').select('role').eq('id',user.id).maybeSingle(),8000,'Checking account role');if(p.error)throw p.error;if(!['shop_owner','admin'].includes(p.data?.role)){msg('The currently signed-in account is not a shop owner/admin account.',true);return null}return user}catch(err){msg('Account check failed: '+(err?.message||err),true);return null}}
+function profileDisplay(p){if(!p)return '';const full=[p.first_name,p.last_name].filter(Boolean).join(' ').trim();return String(p.full_name||p.display_name||p.name||p.username||full||p.email||'').trim()}
+async function load(){if(loading)return;loading=true;clearMsg();$('body').innerHTML='<tr><td colspan="6" class="empty">Loading orders...</td></tr>';try{if(!db){const ok=await initSupabase();if(!ok)return}const user=await checkStaff();if(!user)return;const result=await withTimeout(db.from('orders').select('*').order('created_at',{ascending:false}),10000,'Loading orders');if(result.error)throw result.error;rows=result.data||[];inventoryMap={};profilesMap={};const ids=[...new Set(rows.map(o=>o.inventory_id).filter(v=>v!==null&&v!==undefined))];if(ids.length){const r=await withTimeout(db.from('inventory').select('id,item_code,name,price,image_url').in('id',ids),10000,'Loading item details');if(!r.error)(r.data||[]).forEach(i=>inventoryMap[String(i.id)]=i)}const buyerIds=[...new Set(rows.map(o=>o.buyer_id).filter(Boolean))];if(buyerIds.length){const p=await withTimeout(db.from('profiles').select('*').in('id',buyerIds),10000,'Loading buyer profiles');if(!p.error)(p.data||[]).forEach(x=>profilesMap[String(x.id)]=x)}render()}catch(err){rows=[];$('count').textContent='0 ORDERS';$('body').innerHTML='<tr><td colspan="6" class="empty">Unable to load orders.</td></tr>';msg('Could not load orders: '+(err?.message||err),true)}finally{loading=false}}
+function render(){const q=$('search').value.trim().toLowerCase();const list=rows.filter(o=>{const p=inventoryMap[String(o.inventory_id)]||{},bp=profilesMap[String(o.buyer_id)]||{},bn=profileDisplay(bp);return !q||[o.id,o.buyer_id,o.status,o.inventory_id,p.name,p.item_code,bn].some(v=>String(v??'').toLowerCase().includes(q))});$('count').textContent=`${list.length} ORDER${list.length===1?'':'S'}`;if(!list.length){$('body').innerHTML='<tr><td colspan="6" class="empty">No orders found.</td></tr>';return}$('body').innerHTML=list.map(o=>{const p=inventoryMap[String(o.inventory_id)]||{},bp=profilesMap[String(o.buyer_id)]||{},bn=profileDisplay(bp),date=o.created_at?new Date(o.created_at).toLocaleString():'—';return `<tr><td><strong>#${esc(o.id)}</strong></td><td><div class="item">${p.image_url?`<img class="thumb" src="${esc(p.image_url)}" alt="">`:''}<div><strong>${esc(p.name||'Item')}</strong><div>${esc(p.item_code||o.inventory_id)} · ₱${Number(p.price||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</div></div></div></td><td>${bn?`<span class="buyer-name">${esc(bn)}</span><span class="buyer-id">${esc(o.buyer_id)}</span>`:esc(o.buyer_id)}</td><td>${esc(date)}</td><td><span class="status ${esc(o.status)}">${esc(o.status)}</span></td><td><select data-status="${esc(o.id)}"><option value="pending" ${o.status==='pending'?'selected':''}>Pending</option><option value="confirmed" ${o.status==='confirmed'?'selected':''}>Confirmed</option><option value="completed" ${o.status==='completed'?'selected':''}>Completed</option><option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option></select></td></tr>`}).join('')}
+$('body').addEventListener('change',async e=>{const s=e.target.closest('[data-status]');if(!s||!db)return;const id=s.dataset.status,newStatus=s.value;s.disabled=true;try{const r=await withTimeout(db.from('orders').update({status:newStatus}).eq('id',id),10000,'Updating order');if(r.error)throw r.error;const row=rows.find(o=>String(o.id)===String(id));if(row)row.status=newStatus;render();msg('Order status updated.');setTimeout(clearMsg,2500)}catch(err){msg('Could not update order: '+(err?.message||err),true);await load()}finally{s.disabled=false}});
+$('search').oninput=render;$('inventoryBtn').onclick=()=>location.href='shop-owner.html';$('signOutBtn').onclick=async()=>{if(!db){location.href='login.html';return}$('signOutBtn').disabled=true;try{const r=await withTimeout(db.auth.signOut(),8000,'Signing out');if(r.error)throw r.error;location.href='login.html'}catch(err){$('signOutBtn').disabled=false;msg('Sign out failed: '+(err?.message||err),true)}};
+function startRealtime(){if(!db||realtimeChannel)return;realtimeChannel=db.channel('datihan-shop-orders-page').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>load()).subscribe()}
+async function start(){const ok=await initSupabase();if(ok){await load();startRealtime()}}
 start();
 </script>
 </body>
