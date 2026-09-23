@@ -1,19 +1,23 @@
-/* Datihan neutral editorial theme
-   Brand typography remains Bodoni Moda + Inter.
-   Colors are intentionally muted for a cleaner fashion/editorial look.
+/* Datihan official neutral editorial palette
+   Brand typography: Bodoni Moda + Inter.
+   Palette:
+   #281F17 Deep Espresso
+   #6B4E3D Warm Brown
+   #DCC9B8 Warm Beige
+   #FBF6F3 Soft Cream
 */
 :root{
-  --bg:#F5F0E8;
-  --panel:#FAF7F1;
-  --plate:#FFFDF8;
-  --ink:#25211E;
-  --ink-soft:#6A625A;
-  --line:rgba(37,33,30,.16);
-  --accent:#3D342C;
-  --accent-2:#8A7A69;
-  --shadow:rgba(37,33,30,.14);
-  --paper:#F5F0E8;
-  --red:#7A5546;
+  --bg:#FBF6F3;
+  --panel:#DCC9B8;
+  --plate:#FBF6F3;
+  --ink:#281F17;
+  --ink-soft:#6B4E3D;
+  --line:#DCC9B8;
+  --accent:#281F17;
+  --accent-2:#6B4E3D;
+  --shadow:rgba(40,31,23,.16);
+  --paper:#FBF6F3;
+  --red:#6B4E3D;
 }
 
 html,body{background:var(--bg)!important;color:var(--ink)!important}
@@ -25,35 +29,37 @@ a{color:inherit}
 .hero{grid-template-columns:1fr!important}
 
 /* Main storefront */
-header{background:color-mix(in srgb,var(--bg) 92%,transparent)!important;border-bottom-color:var(--line)!important}
+header{background:var(--bg)!important;border-bottom-color:var(--line)!important}
 .tabbtn,.chip,.fchip{color:var(--ink-soft)!important}
 .tabbtn:hover,.tabbtn[aria-selected="true"],.chip:hover,.fchip:hover{color:var(--ink)!important}
 .header-cta,.item-card .add-btn{background:var(--accent)!important;color:var(--plate)!important}
-.header-cta:hover,.item-card .add-btn:hover{background:#2B2622!important}
+.header-cta:hover,.item-card .add-btn:hover{background:var(--accent-2)!important;color:var(--plate)!important}
 .btn-primary{background:var(--accent)!important;color:var(--plate)!important}
-.btn-primary:hover{background:#2B2622!important}
-.btn-outline{border-color:var(--ink)!important;color:var(--ink)!important}
+.btn-primary:hover{background:var(--accent-2)!important;color:var(--plate)!important}
+.btn-outline{border-color:var(--ink)!important;color:var(--ink)!important;background:transparent!important}
 .btn-outline:hover{background:var(--ink)!important;color:var(--plate)!important}
-.search-box,.item-card,.impact .box{background:var(--panel)!important;border-color:var(--line)!important}
+.search-box,.item-card,.impact .box{background:var(--plate)!important;border-color:var(--line)!important}
 .teaser-card,.split-panel{background:var(--ink)!important;color:var(--plate)!important}
 
 /* Standalone buyer / owner / admin pages */
-.box,.order,.empty,.loading,.message{background:var(--panel)!important;border-color:var(--line)!important}
+.box,.order,.empty,.loading,.message{background:var(--plate)!important;border-color:var(--line)!important}
 .box{box-shadow:8px 8px 0 var(--ink)!important}
 .topbar{background:var(--ink)!important;color:var(--plate)!important;border-bottom-color:var(--line)!important}
 input,select,textarea{background:var(--plate)!important;color:var(--ink)!important;border-color:var(--line)!important}
 button,.back-btn{background:var(--accent)!important;color:var(--plate)!important;border-color:var(--accent)!important}
-button:hover:not(:disabled),.back-btn:hover{background:var(--ink)!important;color:var(--plate)!important;border-color:var(--ink)!important}
-.status.pending{background:#F1E9DC!important;border-color:#B9AA98!important;color:#51463D!important}
-.status.confirmed{background:#E7EFE3!important;border-color:#A4B69A!important;color:#3F5C35!important}
-.status.completed{background:#E8E5DD!important;border-color:#B3A894!important;color:#594D3D!important}
-.status.cancelled{background:#F3E4DF!important;border-color:#C69B90!important;color:#7A2D20!important}
+button:hover:not(:disabled),.back-btn:hover{background:var(--accent-2)!important;color:var(--plate)!important;border-color:var(--accent-2)!important}
 
-/* Shared warm-beige form surfaces */
+/* Statuses use only the official Datihan palette. */
+.status.pending{background:var(--plate)!important;border-color:var(--accent-2)!important;color:var(--accent)!important}
+.status.confirmed{background:var(--panel)!important;border-color:var(--accent-2)!important;color:var(--ink)!important}
+.status.completed{background:var(--panel)!important;border-color:var(--ink)!important;color:var(--ink)!important}
+.status.cancelled{background:var(--panel)!important;border-color:var(--accent-2)!important;color:var(--ink)!important}
+
+/* Shared form surfaces */
 .field input:focus,.field input:hover{border-color:var(--accent)!important;box-shadow:4px 4px 0 var(--accent)!important}
 .hint,.date,.meta,.ink-soft{color:var(--ink-soft)!important}
 
-/* Keep the page loader visually consistent with the site */
+/* Page loader */
 #datihan-page-loader{background:var(--bg)!important;color:var(--ink)!important;font-family:'Inter',sans-serif!important}
 #datihan-page-loader .loader-brand{font-family:'Bodoni Moda',serif!important;color:var(--ink)!important}
 #datihan-page-loader .loader-text{font-family:'Inter',sans-serif!important;color:var(--ink-soft)!important}
