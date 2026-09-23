@@ -56,6 +56,8 @@
       .datihan-account-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;padding:8px;background:var(--panel,#fff);border:1px solid var(--ink,#111);box-shadow:5px 5px 0 var(--ink,#111);z-index:1000}
       .datihan-account-menu[hidden]{display:none!important}
       .datihan-account-email{padding:9px 10px 10px;border-bottom:1px solid rgba(0,0,0,.18);font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+      .datihan-account-orders{width:100%;margin-top:8px;padding:10px;border:1px solid var(--ink,#111);background:var(--panel,#fff);color:var(--ink,#111);font:inherit;cursor:pointer;text-align:left;text-decoration:none;display:block}
+      .datihan-account-orders:hover{background:#eee}
       .datihan-account-signout{width:100%;margin-top:8px;padding:10px;border:1px solid var(--ink,#111);background:var(--ink,#111);color:var(--panel,#fff);font:inherit;cursor:pointer;text-align:left}
       .datihan-account-signout:hover{opacity:.88}
       @media(max-width:900px){
@@ -116,7 +118,7 @@
     menu.id = 'datihanAccountMenu';
     menu.className = 'datihan-account-menu';
     menu.hidden = true;
-    menu.innerHTML = '<div class="datihan-account-email"></div><button class="datihan-account-signout" type="button">Sign out</button>';
+    menu.innerHTML = '<div class="datihan-account-email"></div><a class="datihan-account-orders" href="orders.html">My Orders</a><button class="datihan-account-signout" type="button">Sign out</button>';
     menu.querySelector('.datihan-account-email').textContent = user.email || 'Signed in';
     menu.querySelector('.datihan-account-signout').addEventListener('click', async () => {
       closeMenu();
