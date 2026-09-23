@@ -8,8 +8,8 @@ window.openCheckoutAfterLogin = window.openCheckoutAfterLogin || function(){};
 
 // Shared helper used by main.js when rendering products/pop-ups.
 window.escapeHtml = window.escapeHtml || function(value){
-  return String(value ?? '').replace(/[&<>"']/g, ch => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  return String(value ?? '').replace(/[&<>\"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'
   }[ch]));
 };
 
@@ -184,4 +184,160 @@ document.querySelectorAll('.faq-q').forEach(btn => {
     checkShopOwner();
   });
   observer.observe(document.body,{childList:true,subtree:true});
+})();
+
+// ---------------- COORDINATED INITIAL PAGE LOAD ----------------
+// Keep the storefront visually together during the first load. The browser
+// still downloads resources independently, but customers do not see the
+// header, account controls, cart, products, or pop-up content appearing one
+// piece at a time. Realtime updates continue normally after the initial load.
+(function(){
+  const loader=document.createElement('div');
+  loader.id='datihanInitialLoader';
+  loader.innerHTML=`
+    <div class="datihan-loader-card" role="status" aria-live="polite" aria-label="Loading Datihan">
+      <div class="datihan-loader-logo">DATIHAN</div>
+      <div class="datihan-loader-bar"><span></span></div>
+      <div class="datihan-loader-text">Loading storefront...</div>
+    </div>`;
+
+  const style=document.createElement('style');
+  style.id='datihanInitialLoaderStyles';
+  style.textContent=`
+    #datihanInitialLoader{
+      position:fixed;
+      inset:0;
+      z-index:2147483647;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--bg,#E6E6E2);
+      color:var(--ink,#1B1B1A);
+      opacity:1;
+      visibility:visible;
+      transition:opacity .24s ease,visibility .24s ease;
+    }
+    #datihanInitialLoader.is-ready{
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+    }
+    .datihan-loader-card{
+      width:min(360px,calc(100vw - 44px));
+      text-align:center;
+    }
+    .datihan-loader-logo{
+      font-family:'Barlow Condensed',sans-serif;
+      font-size:clamp(2.6rem,10vw,4.5rem);
+      font-weight:700;
+      letter-spacing:.12em;
+      line-height:1;
+    }
+    .datihan-loader-bar{
+      height:3px;
+      margin:22px auto 12px;
+      width:100%;
+      overflow:hidden;
+      background:var(--line,rgba(27,27,26,.16));
+    }
+    .datihan-loader-bar span{
+      display:block;
+      width:38%;
+      height:100%;
+      background:var(--accent,#A63B2C);
+      animation:datihanLoaderMove 1.05s ease-in-out infinite;
+    }
+    .datihan-loader-text{
+      font-family:'IBM Plex Mono',monospace;
+      font-size:.72rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--ink-soft,#58564F);
+    }
+    @keyframes datihanLoaderMove{
+      0%{transform:translateX(-130%)}
+      50%{transform:translateX(150%)}
+      100%{transform:translateX(330%)}
+    }
+    @media(prefers-reduced-motion:reduce){
+      .datihan-loader-bar span{animation:none;margin-left:31%;}
+    }
+  `;
+
+  document.head.appendChild(style);
+  document.body.appendChild(loader);
+  document.documentElement.style.overflow='hidden';
+
+  const started=Date.now();
+  const maxWait=10000;
+  let released=false;
+
+  function accountReady(){
+    const auth=document.getElementById('authBtn');
+    if(!auth || auth.style.visibility==='hidden') return false;
+
+    const role=document.body.dataset.accountRole;
+    if(!role) return false;
+
+    if(role==='buyer'){
+      return !!document.getElementById('datihanOrdersBtn');
+    }
+
+    if(role==='shop_owner'){
+      const roleBtn=document.getElementById('roleNavBtn');
+      return !!roleBtn && getComputedStyle(roleBtn).display!=='none';
+    }
+
+    return role==='guest';
+  }
+
+  function catalogReady(){
+    const grid=document.getElementById('shopGrid');
+    const noResults=document.getElementById('noResults');
+    if(!grid || !noResults) return true;
+    return grid.children.length>0 || getComputedStyle(noResults).display!=='none';
+  }
+
+  function popupsReady(){
+    const list=document.getElementById('popupEventList');
+    if(!list) return true;
+    return !/Loading pop-ups/i.test(list.textContent||'');
+  }
+
+  function imagesReady(){
+    const images=Array.from(document.images);
+    return images.every(img=>img.complete);
+  }
+
+  function release(reason){
+    if(released) return;
+    released=true;
+    loader.classList.add('is-ready');
+    document.documentElement.style.overflow='';
+    window.setTimeout(()=>loader.remove(),280);
+    if(reason) console.info('Datihan initial load ready:',reason);
+  }
+
+  function check(){
+    if(released) return;
+
+    const timedOut=Date.now()-started>=maxWait;
+    const pageLoaded=document.readyState==='complete';
+
+    if(timedOut){
+      release('timeout safeguard');
+      return;
+    }
+
+    if(pageLoaded && accountReady() && catalogReady() && popupsReady() && imagesReady()){
+      release('critical storefront state ready');
+      return;
+    }
+
+    window.setTimeout(check,100);
+  }
+
+  if(document.readyState==='complete') check();
+  else window.addEventListener('load',check,{once:true});
+  window.setTimeout(check,250);
 })();
