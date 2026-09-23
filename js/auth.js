@@ -29,7 +29,6 @@
     document.querySelectorAll('button, a').forEach(el => {
       if (isOrdersControl(el)) el.style.display = isBuyer ? '' : 'none';
     });
-    // Category chips belong only to the Shop tab. Hide homepage chip rows.
     document.querySelectorAll('.chip-row').forEach(el => {
       el.style.display = isShopOwner ? 'none' : '';
     });
@@ -41,6 +40,10 @@
     const style = document.createElement('style');
     style.id = 'datihanAccountMenuStyles';
     style.textContent = `
+      /* Account controls: Shop Owner button stays to the left of the hamburger. */
+      .header-right #roleNavBtn{order:1}
+      .header-right #authBtn{order:2}
+      .header-right #cartBtn{order:3}
       #authBtn.account-menu-trigger{width:44px;min-width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:0;position:relative}
       #authBtn.account-menu-trigger .hamburger-lines,#authBtn.account-menu-trigger .hamburger-lines::before,#authBtn.account-menu-trigger .hamburger-lines::after{display:block;width:18px;height:2px;background:currentColor;content:'';transition:transform .18s ease}
       #authBtn.account-menu-trigger .hamburger-lines::before{position:absolute;transform:translateY(-6px)}
@@ -56,6 +59,10 @@
       .datihan-account-signout:hover{opacity:.88}
     `;
     document.head.appendChild(style);
+  }
+
+  function showAuthControl() {
+    authBtn.style.visibility = 'visible';
   }
 
   function closeMenu() {
@@ -113,6 +120,7 @@
       menu.hidden = !open;
       authBtn.setAttribute('aria-expanded', String(open));
     };
+    showAuthControl();
     applying = false;
   }
 
@@ -124,6 +132,7 @@
     authBtn.removeAttribute('aria-label');
     authBtn.removeAttribute('aria-expanded');
     authBtn.onclick = () => { location.href = 'login.html'; };
+    showAuthControl();
     applying = false;
   }
 
@@ -132,8 +141,6 @@
     currentUser = user || null;
 
     if (currentUser) {
-      // The header account control is ALWAYS the hamburger when signed in.
-      // The email is shown only inside the opened account menu.
       renderSignedIn(currentUser);
 
       const { data: profile } = await client.from('profiles').select('role').eq('id', currentUser.id).maybeSingle();
@@ -161,8 +168,6 @@
     }
   }
 
-  // Only protect the hamburger from unrelated UI code. No email-button
-  // fallback or email-as-header-button behavior exists anymore.
   function watchHeader() {
     const observer = new MutationObserver(() => {
       if (applying || !currentUser) return;
