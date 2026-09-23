@@ -24,8 +24,23 @@ html,body{background:var(--bg)!important;color:var(--ink)!important}
 body{font-family:'Inter',sans-serif!important}
 a{color:inherit}
 
-/* Remove the temporary placeholder branding until the official Datihan logo is provided. */
-.plate-logo,.plate-hero{display:none!important}
+/* Official Datihan logo */
+.plate-logo{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:92px!important;
+  height:48px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent url('../assets/datihan-logo.svg') center/82px auto no-repeat!important;
+  color:transparent!important;
+  flex:0 0 auto!important;
+}
+.plate-logo svg{display:none!important}
+
+/* The temporary center hero plate is intentionally removed. */
+.plate-hero{display:none!important}
 .hero{grid-template-columns:1fr!important}
 
 /* Main storefront */
