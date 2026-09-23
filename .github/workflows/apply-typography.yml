@@ -26,10 +26,11 @@ jobs:
 
           replacements = [
               (r"Barlow Condensed", "Bodoni Moda"),
-              (r"Work Sans", "Manrope"),
-              (r"IBM Plex Mono", "Manrope"),
-              (r"Courier New", "Manrope"),
               (r"Arial Narrow", "Bodoni Moda"),
+              (r"Work Sans", "Inter"),
+              (r"IBM Plex Mono", "Inter"),
+              (r"Courier New", "Inter"),
+              (r"Manrope", "Inter"),
           ]
 
           changed = []
@@ -42,7 +43,6 @@ jobs:
                   path.write_text(text, encoding='utf-8')
                   changed.append(str(path))
 
-          # Add the shared stylesheet to every HTML page exactly once.
           link = '<link rel="stylesheet" href="css/typography.css">'
           for path in root.glob('*.html'):
               text = path.read_text(encoding='utf-8')
