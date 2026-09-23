@@ -1,62 +1,16 @@
 /* Datihan global typography — exactly two font families */
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,600;6..96,700&family=Manrope:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,600;6..96,700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --font-body: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
   --font-display: 'Bodoni Moda', serif;
 }
 
-html, body {
-  font-family: var(--font-body) !important;
-}
-
-body, button, input, select, textarea, option, a, label, table, th, td {
-  font-family: var(--font-body) !important;
-}
-
-h1, h2, h3, h4, h5, h6,
-.display,
-.hero h1,
-.section-head h2,
-.box h1,
-.hero h1,
-.modal h2,
-.top h1,
-.loader-brand,
-.datihan-loader-logo,
-.stat-value,
-.split-panel .big,
-.teaser-card h3 {
-  font-family: var(--font-display) !important;
-  font-weight: 600;
-}
-
-/* Keep small UI labels/body controls in Manrope. */
-button, input, select, textarea,
-.btn, .header-cta, .tabbtn, .chip, .fchip,
-.meta, .price, .tag-font, .event-status,
-.status, .cart-count, .eyebrow, .brand,
-.hint, .message, .date, .order-id {
-  font-family: var(--font-body) !important;
-}
-
-/* SVG wordmarks/text should use the same two-font system too. */
-svg text {
-  font-family: var(--font-display) !important;
-}
-
-/* Prevent old utility classes from introducing a third font. */
-.tag-font,
-code, pre, kbd, samp {
-  font-family: var(--font-body) !important;
-}
-
-/* Loader uses the same Datihan typography. */
-#datihan-page-loader,
-#datihan-page-loader .loader-text {
-  font-family: var(--font-body) !important;
-}
-#datihan-page-loader .loader-brand {
-  font-family: var(--font-display) !important;
-  font-weight: 600;
-}
+html, body { font-family: var(--font-body) !important; }
+body, button, input, select, textarea, option, a, label, table, th, td { font-family: var(--font-body) !important; }
+h1, h2, h3, h4, h5, h6, .display, .hero h1, .section-head h2, .box h1, .modal h2, .top h1, .loader-brand, .datihan-loader-logo, .stat-value, .split-panel .big, .teaser-card h3 { font-family: var(--font-display) !important; font-weight: 600; }
+button, input, select, textarea, .btn, .header-cta, .tabbtn, .chip, .fchip, .meta, .price, .tag-font, .event-status, .status, .cart-count, .eyebrow, .brand, .hint, .message, .date, .order-id, nav, nav a, nav button { font-family: var(--font-body) !important; }
+svg text { font-family: var(--font-display) !important; }
+.tag-font, code, pre, kbd, samp { font-family: var(--font-body) !important; }
+#datihan-page-loader, #datihan-page-loader .loader-text { font-family: var(--font-body) !important; }
+#datihan-page-loader .loader-brand { font-family: var(--font-display) !important; font-weight: 600; }
