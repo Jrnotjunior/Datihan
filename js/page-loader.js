@@ -6,6 +6,17 @@
 (function(){
   'use strict';
 
+  // Load the shared performance helper from this already-included boot file.
+  // This keeps orders pages optimized without requiring another HTML edit.
+  (function loadPerformanceHelper(){
+    if(document.querySelector('script[data-datihan-performance]')) return;
+    const script=document.createElement('script');
+    script.src='js/performance.js';
+    script.defer=true;
+    script.dataset.datihanPerformance='true';
+    document.head.appendChild(script);
+  })();
+
   const root=document.documentElement;
   if(root.dataset.datihanLoaderReady==='true') return;
   root.dataset.datihanLoaderReady='true';
@@ -67,8 +78,8 @@
   }
 
   // Do not wait for window.load or document.fonts.ready. Those events can be
-  // delayed by large product images, CDN resources, or fonts that are not
-  // required for the first usable view.
+  // delayed by large product images, CDN resources, or fonts not required for
+  // the first usable view.
   function releaseAfterDom(){
     window.requestAnimationFrame(()=>window.setTimeout(()=>finish('critical DOM ready'),80));
   }
