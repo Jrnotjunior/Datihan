@@ -1,0 +1,69 @@
+name: Apply Datihan typography
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  typography:
+    if: ${{ !contains(github.event.head_commit.message, '[typography-bot]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply two-font system to all HTML/CSS/JS files
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          files = list(root.glob('*.html')) + list(root.glob('css/*.css')) + list(root.glob('js/*.js'))
+
+          replacements = [
+              (r"Barlow Condensed", "Bodoni Moda"),
+              (r"Work Sans", "Manrope"),
+              (r"IBM Plex Mono", "Manrope"),
+              (r"Courier New", "Manrope"),
+              (r"Arial Narrow", "Bodoni Moda"),
+          ]
+
+          changed = []
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              original = text
+              for old, new in replacements:
+                  text = re.sub(old, new, text, flags=re.I)
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  changed.append(str(path))
+
+          # Add the shared stylesheet to every HTML page exactly once.
+          link = '<link rel="stylesheet" href="css/typography.css">'
+          for path in root.glob('*.html'):
+              text = path.read_text(encoding='utf-8')
+              if 'css/typography.css' not in text:
+                  marker = '</head>'
+                  if marker in text:
+                      text = text.replace(marker, f'  {link}\n{marker}', 1)
+                      path.write_text(text, encoding='utf-8')
+                      changed.append(str(path))
+
+          print('Typography updated:', ', '.join(changed) if changed else 'no changes needed')
+
+      - name: Commit typography changes
+        shell: bash
+        run: |
+          git config user.name "datihan-typography-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' 'css/*.css' 'js/*.js'
+          if git diff --cached --quiet; then
+            echo "No typography changes to commit."
+          else
+            git commit -m "Apply Datihan two-font system [typography-bot]"
+            git push
+          fi
