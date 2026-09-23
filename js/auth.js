@@ -40,10 +40,11 @@
     const style = document.createElement('style');
     style.id = 'datihanAccountMenuStyles';
     style.textContent = `
-      /* Account controls: Shop Owner button stays to the left of the hamburger. */
-      .header-right #roleNavBtn{order:1}
-      .header-right #authBtn{order:2}
-      .header-right #cartBtn{order:3}
+      /* Account controls: Shop Owner is always LEFT of the hamburger. */
+      .header-right #roleNavBtn{order:1 !important}
+      .header-right .datihan-account-wrap{order:2 !important}
+      .header-right #authBtn{order:2 !important}
+      .header-right #cartBtn{order:3 !important}
       #authBtn.account-menu-trigger{width:44px;min-width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:0;position:relative}
       #authBtn.account-menu-trigger .hamburger-lines,#authBtn.account-menu-trigger .hamburger-lines::before,#authBtn.account-menu-trigger .hamburger-lines::after{display:block;width:18px;height:2px;background:currentColor;content:'';transition:transform .18s ease}
       #authBtn.account-menu-trigger .hamburger-lines::before{position:absolute;transform:translateY(-6px)}
@@ -57,12 +58,28 @@
       .datihan-account-email{padding:9px 10px 10px;border-bottom:1px solid rgba(0,0,0,.18);font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
       .datihan-account-signout{width:100%;margin-top:8px;padding:10px;border:1px solid var(--ink,#111);background:var(--ink,#111);color:var(--panel,#fff);font:inherit;cursor:pointer;text-align:left}
       .datihan-account-signout:hover{opacity:.88}
+      @media(max-width:900px){
+        .header-right #roleNavBtn{order:1 !important}
+        .header-right .datihan-account-wrap{order:2 !important}
+      }
     `;
     document.head.appendChild(style);
   }
 
   function showAuthControl() {
     authBtn.style.visibility = 'visible';
+  }
+
+  function normalizeHeaderOrder() {
+    const headerRight = document.querySelector('.header-right');
+    if (!headerRight || !roleNavBtn) return;
+    const accountWrap = authBtn.closest('.datihan-account-wrap');
+    const accountNode = accountWrap || authBtn;
+    if (accountNode && roleNavBtn.nextElementSibling !== accountNode) {
+      headerRight.insertBefore(roleNavBtn, accountNode);
+    }
+    roleNavBtn.style.order = '1';
+    accountNode.style.order = '2';
   }
 
   function closeMenu() {
@@ -120,6 +137,8 @@
       menu.hidden = !open;
       authBtn.setAttribute('aria-expanded', String(open));
     };
+
+    normalizeHeaderOrder();
     showAuthControl();
     applying = false;
   }
@@ -158,6 +177,7 @@
         }
         setAccountControls({ isShopOwner: false, isBuyer: true });
       }
+      normalizeHeaderOrder();
     } else {
       renderLoggedOut();
       if (roleNavBtn) {
@@ -175,6 +195,7 @@
       if (!trigger.classList.contains('account-menu-trigger') || !trigger.querySelector('.hamburger-lines')) {
         renderSignedIn(currentUser);
       }
+      normalizeHeaderOrder();
     });
     observer.observe(authBtn, { childList: true, characterData: true, attributes: true, subtree: true });
   }
