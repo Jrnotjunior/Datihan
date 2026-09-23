@@ -24,6 +24,12 @@
       href.includes('my-orders') || href.includes('orders.html') || id.includes('orders') || cls.includes('orders');
   }
 
+  function removeLegacyOrderLinks() {
+    document.querySelectorAll('[data-datihan-order-link]').forEach(el => {
+      if (el !== ordersBtn) el.remove();
+    });
+  }
+
   function ensureOrdersButton() {
     const headerRight = document.querySelector('.header-right');
     const cartBtn = document.getElementById('cartBtn');
@@ -50,6 +56,7 @@
     document.querySelectorAll('button, a').forEach(el => {
       if (el !== ordersBtn && isOrdersControl(el)) el.remove();
     });
+    removeLegacyOrderLinks();
 
     const standaloneOrders = ensureOrdersButton();
     if (standaloneOrders) standaloneOrders.style.display = isBuyer ? 'inline-flex' : 'none';
@@ -263,8 +270,11 @@
   }
 
   function watchHeader() {
+    const headerRight = document.querySelector('.header-right');
+    const target = headerRight || authBtn;
     const observer = new MutationObserver(() => {
       if (applying || !currentUser) return;
+      removeLegacyOrderLinks();
       const trigger = document.getElementById('authBtn');
       if (!trigger.classList.contains('account-menu-trigger') || !trigger.querySelector('.hamburger-lines')) {
         renderSignedIn(currentUser);
@@ -272,7 +282,7 @@
       ensureOrdersButton();
       normalizeHeaderOrder();
     });
-    observer.observe(authBtn, { childList: true, characterData: true, attributes: true, subtree: true });
+    observer.observe(target, { childList: true, characterData: true, attributes: true, subtree: true });
   }
 
   document.addEventListener('click', event => {
