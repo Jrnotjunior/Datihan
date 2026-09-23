@@ -1,13 +1,39 @@
-/* Datihan global page loader
- * Coordinates the first usable paint without waiting for every image/font/network
- * resource. Critical HTML and page scripts get a chance to render, while heavy
- * non-critical resources continue loading in the background.
- */
+/* Datihan global page loader + typography bootstrap */
 (function(){
   'use strict';
 
+  /* Load the two-font Datihan typography system before the page is revealed. */
+  (function loadTypography(){
+    if(document.querySelector('link[data-datihan-typography]')) return;
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap';
+    link.dataset.datihanTypography='true';
+    document.head.appendChild(link);
+
+    const style=document.createElement('style');
+    style.id='datihan-typography-overrides';
+    style.textContent=`
+      :root{
+        --datihan-display-font:'Bodoni Moda',Georgia,serif;
+        --datihan-body-font:'Manrope',Arial,sans-serif;
+      }
+      html,body,
+      body *{font-family:var(--datihan-body-font)!important}
+      h1,h2,h3,h4,h5,h6,
+      .display,.loader-brand,.brand,
+      .top h1,.box h1,
+      .order-id,.section-head h2,
+      .teaser-card h3,.split-panel .big,
+      .plate-logo svg text,.plate-hero svg text:first-of-type,
+      svg text{font-family:var(--datihan-display-font)!important}
+      button,input,textarea,select{font-family:var(--datihan-body-font)!important}
+      .loader-brand{font-weight:700!important}
+    `;
+    (document.head||document.documentElement).appendChild(style);
+  })();
+
   // Load the shared performance helper from this already-included boot file.
-  // This keeps orders pages optimized without requiring another HTML edit.
   (function loadPerformanceHelper(){
     if(document.querySelector('script[data-datihan-performance]')) return;
     const script=document.createElement('script');
@@ -30,15 +56,15 @@
       position:fixed;inset:0;z-index:2147483647;
       display:grid;place-items:center;
       background:#f1f0ec;color:#171717;
-      font-family:"Courier New",monospace;
+      font-family:'Manrope',Arial,sans-serif;
       opacity:1;visibility:visible;
       transition:opacity .18s ease,visibility .18s ease;
     }
     #datihan-page-loader.is-done{opacity:0;visibility:hidden;pointer-events:none}
     #datihan-page-loader .loader-box{text-align:center}
     #datihan-page-loader .loader-brand{
-      font-family:Impact,"Arial Narrow",Arial,sans-serif;
-      font-size:42px;line-height:1;letter-spacing:1px
+      font-family:'Bodoni Moda',Georgia,serif!important;
+      font-weight:700;font-size:42px;line-height:1;letter-spacing:1px
     }
     #datihan-page-loader .loader-text{
       margin-top:10px;font-size:11px;letter-spacing:2px;color:#666
@@ -77,9 +103,6 @@
     if(reason) console.info('Datihan page ready:',reason);
   }
 
-  // Do not wait for window.load or document.fonts.ready. Those events can be
-  // delayed by large product images, CDN resources, or fonts not required for
-  // the first usable view.
   function releaseAfterDom(){
     window.requestAnimationFrame(()=>window.setTimeout(()=>finish('critical DOM ready'),80));
   }
@@ -90,6 +113,5 @@
     releaseAfterDom();
   }
 
-  // Safety fallback for a broken script or unusually slow document.
   window.setTimeout(()=>finish('safety timeout'),3500);
 })();
