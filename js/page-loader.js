@@ -1,6 +1,7 @@
 /* Datihan global page loader
- * Keeps the first paint coordinated so pages do not reveal buttons, icons,
- * fonts, and images one-by-one while the browser is still loading.
+ * Coordinates the first usable paint without waiting for every image/font/network
+ * resource. Critical HTML and page scripts get a chance to render, while heavy
+ * non-critical resources continue loading in the background.
  */
 (function(){
   'use strict';
@@ -20,7 +21,7 @@
       background:#f1f0ec;color:#171717;
       font-family:"Courier New",monospace;
       opacity:1;visibility:visible;
-      transition:opacity .22s ease,visibility .22s ease;
+      transition:opacity .18s ease,visibility .18s ease;
     }
     #datihan-page-loader.is-done{opacity:0;visibility:hidden;pointer-events:none}
     #datihan-page-loader .loader-box{text-align:center}
@@ -36,7 +37,7 @@
     }
     #datihan-page-loader .loader-line::after{
       content:"";display:block;width:45%;height:100%;background:#171717;
-      animation:datihanLoaderMove 1s ease-in-out infinite
+      animation:datihanLoaderMove .9s ease-in-out infinite
     }
     @keyframes datihanLoaderMove{
       0%{transform:translateX(-110%)}
@@ -56,23 +57,28 @@
   document.documentElement.appendChild(loader);
 
   let finished=false;
-  function finish(){
+  function finish(reason){
     if(finished) return;
     finished=true;
     root.classList.remove('datihan-loading');
     loader.classList.add('is-done');
-    window.setTimeout(()=>loader.remove(),260);
+    window.setTimeout(()=>loader.remove(),220);
+    if(reason) console.info('Datihan page ready:',reason);
   }
 
-  function afterResources(){
-    const fonts=document.fonts?.ready;
-    if(fonts&&typeof fonts.then==='function'){
-      fonts.catch(()=>{}).then(()=>window.setTimeout(finish,180));
-    }else{
-      window.setTimeout(finish,220);
-    }
+  // Do not wait for window.load or document.fonts.ready. Those events can be
+  // delayed by large product images, CDN resources, or fonts that are not
+  // required for the first usable view.
+  function releaseAfterDom(){
+    window.requestAnimationFrame(()=>window.setTimeout(()=>finish('critical DOM ready'),80));
   }
 
-  window.addEventListener('load',afterResources,{once:true});
-  window.setTimeout(finish,10000);
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',releaseAfterDom,{once:true});
+  }else{
+    releaseAfterDom();
+  }
+
+  // Safety fallback for a broken script or unusually slow document.
+  window.setTimeout(()=>finish('safety timeout'),3500);
 })();
