@@ -46,19 +46,181 @@
     document.body.dataset.accountRole = isShopOwner ? 'shop_owner' : (isBuyer ? 'buyer' : 'guest');
   }
 
+  function ensureAccountMenuStyles() {
+    if (document.getElementById('datihanAccountMenuStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'datihanAccountMenuStyles';
+    style.textContent = `
+      #authBtn.account-menu-trigger {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0;
+        position: relative;
+      }
+
+      #authBtn.account-menu-trigger .hamburger-lines,
+      #authBtn.account-menu-trigger .hamburger-lines::before,
+      #authBtn.account-menu-trigger .hamburger-lines::after {
+        display: block;
+        width: 18px;
+        height: 2px;
+        background: currentColor;
+        content: '';
+        transition: transform .18s ease;
+      }
+
+      #authBtn.account-menu-trigger .hamburger-lines::before {
+        position: absolute;
+        transform: translateY(-6px);
+      }
+
+      #authBtn.account-menu-trigger .hamburger-lines::after {
+        position: absolute;
+        transform: translateY(6px);
+      }
+
+      #authBtn.account-menu-trigger[aria-expanded="true"] .hamburger-lines {
+        background: transparent;
+      }
+
+      #authBtn.account-menu-trigger[aria-expanded="true"] .hamburger-lines::before {
+        transform: rotate(45deg);
+      }
+
+      #authBtn.account-menu-trigger[aria-expanded="true"] .hamburger-lines::after {
+        transform: rotate(-45deg);
+      }
+
+      .datihan-account-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 210px;
+        padding: 8px;
+        background: var(--panel, #fff);
+        border: 1px solid var(--ink, #111);
+        box-shadow: 5px 5px 0 var(--ink, #111);
+        z-index: 1000;
+      }
+
+      .datihan-account-wrap {
+        position: relative;
+        display: inline-flex;
+      }
+
+      .datihan-account-email {
+        padding: 9px 10px 10px;
+        border-bottom: 1px solid rgba(0,0,0,.18);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 12px;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+
+      .datihan-account-signout {
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px;
+        border: 1px solid var(--ink, #111);
+        background: var(--ink, #111);
+        color: var(--panel, #fff);
+        font: inherit;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .datihan-account-signout:hover {
+        opacity: .88;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function closeAccountMenu() {
+    const menu = document.getElementById('datihanAccountMenu');
+    if (menu) menu.hidden = true;
+    if (authBtn) authBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function createAccountMenu(user) {
+    if (!authBtn || document.getElementById('datihanAccountMenu')) return;
+
+    ensureAccountMenuStyles();
+
+    const parent = authBtn.parentElement;
+    if (!parent) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'datihan-account-wrap';
+
+    parent.insertBefore(wrap, authBtn);
+    wrap.appendChild(authBtn);
+
+    const menu = document.createElement('div');
+    menu.id = 'datihanAccountMenu';
+    menu.className = 'datihan-account-menu';
+    menu.hidden = true;
+    menu.innerHTML = `
+      <div class="datihan-account-email"></div>
+      <button class="datihan-account-signout" type="button">Sign out</button>
+    `;
+
+    menu.querySelector('.datihan-account-email').textContent = user.email || 'Signed in';
+    menu.querySelector('.datihan-account-signout').addEventListener('click', async () => {
+      closeAccountMenu();
+      await supabaseClient.auth.signOut();
+      location.href = 'index.html';
+    });
+
+    wrap.appendChild(menu);
+
+    authBtn.classList.add('account-menu-trigger');
+    authBtn.setAttribute('aria-label', 'Open account menu');
+    authBtn.setAttribute('aria-haspopup', 'menu');
+    authBtn.setAttribute('aria-expanded', 'false');
+    authBtn.innerHTML = '<span class="hamburger-lines" aria-hidden="true"></span>';
+    authBtn.onclick = (event) => {
+      event.stopPropagation();
+      const isOpen = menu.hidden;
+      menu.hidden = !isOpen;
+      authBtn.setAttribute('aria-expanded', String(isOpen));
+    };
+  }
+
+  function removeAccountMenu() {
+    const menu = document.getElementById('datihanAccountMenu');
+    const wrap = authBtn?.closest('.datihan-account-wrap');
+
+    if (menu) menu.remove();
+
+    if (wrap && authBtn) {
+      const parent = wrap.parentElement;
+      parent.insertBefore(authBtn, wrap);
+      wrap.remove();
+    }
+
+    if (authBtn) {
+      authBtn.classList.remove('account-menu-trigger');
+      authBtn.removeAttribute('aria-label');
+      authBtn.removeAttribute('aria-haspopup');
+      authBtn.removeAttribute('aria-expanded');
+    }
+  }
+
   async function refreshAuthUI() {
     if (!authBtn) return;
 
     const { data: { user } } = await supabaseClient.auth.getUser();
 
     if (user) {
-      const name = user.email || 'Account';
-      authBtn.textContent = name.length > 18 ? name.slice(0, 18) + '…' : name;
-      authBtn.classList.add('signed-in');
-      authBtn.onclick = async () => {
-        await supabaseClient.auth.signOut();
-        location.href = 'index.html';
-      };
+      removeAccountMenu();
+      createAccountMenu(user);
 
       let profile = null;
       if (roleNavBtn) {
@@ -81,6 +243,7 @@
         setAccountControls({ isShopOwner: false, isBuyer: true });
       }
     } else {
+      removeAccountMenu();
       authBtn.textContent = 'Login';
       authBtn.classList.remove('signed-in');
       authBtn.onclick = () => { location.href = 'login.html'; };
@@ -93,6 +256,15 @@
       setAccountControls({ isShopOwner: false, isBuyer: false });
     }
   }
+
+  document.addEventListener('click', (event) => {
+    const wrap = authBtn?.closest('.datihan-account-wrap');
+    if (wrap && !wrap.contains(event.target)) closeAccountMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAccountMenu();
+  });
 
   window.datihanAuth = { supabaseClient, refreshAuthUI };
   refreshAuthUI();
