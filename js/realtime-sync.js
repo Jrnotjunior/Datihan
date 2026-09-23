@@ -9,10 +9,10 @@
   style.id='datihan-page-loader-style';
   style.textContent=`
     html.datihan-loading body{opacity:0!important;visibility:hidden!important}
-    #datihan-page-loader{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:#f1f0ec;color:#171717;font-family:"Courier New",monospace;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}
+    #datihan-page-loader{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;background:#f1f0ec;color:#171717;font-family:"Manrope",monospace;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}
     #datihan-page-loader.is-done{opacity:0;visibility:hidden;pointer-events:none}
     #datihan-page-loader .loader-box{text-align:center}
-    #datihan-page-loader .loader-brand{font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:42px;line-height:1;letter-spacing:1px}
+    #datihan-page-loader .loader-brand{font-family:Impact,"Bodoni Moda",Arial,sans-serif;font-size:42px;line-height:1;letter-spacing:1px}
     #datihan-page-loader .loader-text{margin-top:10px;font-size:11px;letter-spacing:2px;color:#666}
     #datihan-page-loader .loader-line{width:150px;height:2px;margin:18px auto 0;background:#d2d1cc;overflow:hidden}
     #datihan-page-loader .loader-line::after{content:"";display:block;width:45%;height:100%;background:#171717;animation:datihanLoaderMove 1s ease-in-out infinite}

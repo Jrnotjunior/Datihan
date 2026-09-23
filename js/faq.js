@@ -227,7 +227,7 @@ document.querySelectorAll('.faq-q').forEach(btn => {
       text-align:center;
     }
     .datihan-loader-logo{
-      font-family:'Barlow Condensed',sans-serif;
+      font-family:'Bodoni Moda',sans-serif;
       font-size:clamp(2.6rem,10vw,4.5rem);
       font-weight:700;
       letter-spacing:.12em;
@@ -248,7 +248,7 @@ document.querySelectorAll('.faq-q').forEach(btn => {
       animation:datihanLoaderMove 1.05s ease-in-out infinite;
     }
     .datihan-loader-text{
-      font-family:'IBM Plex Mono',monospace;
+      font-family:'Manrope',monospace;
       font-size:.72rem;
       letter-spacing:.08em;
       text-transform:uppercase;
