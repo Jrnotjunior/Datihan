@@ -30,8 +30,6 @@
   let db=null;
   let loading=false;
 
-  // Navigation is wired immediately so a database/network problem can never
-  // make the Back to Store or Sign Out buttons unusable.
   $('storeBtn').addEventListener('click',function(){ window.location.href='index.html'; });
   $('signOutBtn').addEventListener('click',async function(){
     const btn=this;
@@ -106,5 +104,6 @@
   else start();
 })();
 </script>
+<script src="js/page-loader.js"></script>
 </body>
 </html>
