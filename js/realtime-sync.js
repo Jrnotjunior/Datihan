@@ -65,7 +65,11 @@
     if(path.endsWith('/shop-owner.html')||path.endsWith('shop-owner.html')){
       const nav=document.querySelector('.admin-nav');
       if(nav&&!nav.querySelector('[data-datihan-order-link]')){
-        const a=document.createElement('a'); a.href='shop-orders.html'; a.textContent='Orders'; a.dataset.datihanOrderLink='true';
+        const a=document.createElement('a');
+        a.href='shop-orders.html';
+        a.textContent='Customer Orders';
+        a.setAttribute('aria-label','Customer Orders');
+        a.dataset.datihanOrderLink='true';
         a.style.cssText='text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;font-weight:700;padding:9px 13px;border:1px solid #333;background:#f8f8f5;color:#171717';
         nav.appendChild(a);
       }
@@ -163,7 +167,7 @@
   if(!window.supabase || !window.supabase.createClient) return;
   const client=window.supabase.createClient(URL,KEY);
 
-  function escapeHtml(value){return String(value ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+  function escapeHtml(value){return String(value ?? '').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));}
   function peso(value){return '₱'+Number(value||0).toLocaleString('en-PH');}
   function icon(category){
     const paths={
